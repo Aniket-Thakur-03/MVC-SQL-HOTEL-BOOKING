@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { jwtDecode } from "jwt-decode";
+import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
 
-function BookHistory() {
+function AllBookings() {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [filters, setFilters] = useState({
@@ -17,11 +16,6 @@ function BookHistory() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedBookingId, setSelectedBookingId] = useState(null);
-  const [cancellationReason, setCancellationReason] = useState("");
-  const [customReason, setCustomReason] = useState("");
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -30,27 +24,23 @@ function BookHistory() {
       return;
     }
 
-    function getUserId(token) {
-      const decoded = jwtDecode(token);
-      return decoded.user_id;
-    }
-
     const fetchHistory = async () => {
       try {
         const token = localStorage.getItem("token");
-        const userId = getUserId(token);
         const response = await axios.get(
-          `http://localhost:8000/api/booking/details/user/${userId}`,
+          `http://localhost:8000/api/booking/details/booking/`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
+        // console.log(response.data);
         setData(response.data.bookings);
         setFilteredData(response.data.bookings);
         setErrors({});
       } catch (error) {
+        console.error("Api error:", error.message);
         setErrors({
           api: error.response?.data.message,
         });
@@ -64,70 +54,29 @@ function BookHistory() {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
-
   const triggerAlert = (message, type) => {
     setAlertMessage(message);
     setAlertType(type);
     setShowAlert(true);
   };
-  const openModal = (bookingId) => {
-    setSelectedBookingId(bookingId);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setCancellationReason("");
-    setCustomReason("");
-  };
-
-  const handleCancelBooking = async () => {
-    if (!cancellationReason) {
-      toast.error("Please select a cancellation reason");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      closeModal(); // Close the modal after successful cancellation
-      const response = await axios.patch(
-        `http://localhost:8000/api/booking/update/booking/cancel/${selectedBookingId}`,
-        {
-          booking_status: "cancelled",
-          cancellation_reasons: cancellationReason,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      // Update the data and filteredData state
-      setData((prevData) =>
-        prevData.map((booking) =>
-          booking.booking_id === selectedBookingId
-            ? { ...booking, booking_status: "cancelled" }
-            : booking
-        )
-      );
-      setFilteredData((prevData) =>
-        prevData.map((booking) =>
-          booking.booking_id === selectedBookingId
-            ? { ...booking, booking_status: "cancelled" }
-            : booking
-        )
-      );
-
-      toast.success(response.data.message);
-    } catch (error) {
-      toast.error(`Error: ${error.response?.data.message || error.message}`);
-      closeModal();
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  useEffect(() => {
+    const filtered = data.filter((item) => {
+      const matchesBookingId = filters.bookingId
+        ? item.booking_id.toString().includes(filters.bookingId)
+        : true;
+      const matchesGuestName = filters.guestName
+        ? item.guest_name
+            .toLowerCase()
+            .includes(filters.guestName.toLowerCase())
+        : true;
+      const matchesCheckInDate = filters.checkInDate
+        ? new Date(item.check_in_date).toLocaleDateString("en-CA") ===
+          filters.checkInDate
+        : true;
+      return matchesBookingId && matchesGuestName && matchesCheckInDate;
+    });
+    setFilteredData(filtered);
+  }, [filters, data]);
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-grow container mx-auto px-4 py-8">
@@ -193,6 +142,7 @@ function BookHistory() {
                   {item.payment_status}
                 </span>
               </p>
+              <p className="text-sm text-gray-600">User Id: {item.user_id}</p>
               <p className="text-sm text-gray-600">
                 Guest Name: {item.guest_name}
               </p>
@@ -207,6 +157,29 @@ function BookHistory() {
               <p className="text-sm text-gray-600">
                 Room Type: {item.Room.room_type} |Room Price: ₹{item.Room.price}
               </p>
+              <p className="text-sm text-gray-600">
+                Booking Status: {item.booking_status}
+              </p>
+              <p
+                className={`text-sm font-semibold ${
+                  item.checked_status === "checked_out"
+                    ? "text-green-600"
+                    : "text-black" || item.checked_status === "not_checked"
+                    ? "text-red-600"
+                    : "text-black" || item.checked_status === "checked_in"
+                    ? "text-blue-600"
+                    : "text-black"
+                }`}
+              >
+                Checked Status:{" "}
+                {item.checked_status === "not_checked"
+                  ? `Not Checked`
+                  : item.checked_status === "checked_in"
+                  ? `Checked In`
+                  : item.checked_status === "checked_out"
+                  ? `Checked Out`
+                  : null}
+              </p>
               {item.special_requests && (
                 <p className="text-sm text-gray-600">
                   Special Requests: {item.special_requests}
@@ -218,11 +191,78 @@ function BookHistory() {
               {item.booking_status === "pending" && (
                 <button
                   className="px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  onClick={() => openModal(item.booking_id)}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    try {
+                      const response = await axios.patch(
+                        `http://localhost:8000/api/booking/update/booking/cancel/${item.booking_id}`,
+                        { booking_status: "cancelled" },
+                        {
+                          headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                              "token"
+                            )}`,
+                          },
+                        }
+                      );
+                      setData((prevData) =>
+                        prevData.map((booking) =>
+                          booking.booking_id === item.booking_id
+                            ? { ...booking, booking_status: "cancelled" }
+                            : booking
+                        )
+                      );
+                      toast.success(`${response.data.message}`);
+                    } catch (error) {
+                      toast.error(
+                        `Error: ${
+                          error.response?.data.message || error.message
+                        }`
+                      );
+                    }
+                  }}
                 >
                   Cancel Booking
                 </button>
               )}
+              {item.booking_status === "confirmed" &&
+                item.checked_status === "checked_in" && (
+                  <button
+                    className="px-4 py-2 ml-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      try {
+                        const response = await axios.patch(
+                          `http://localhost:8000/api/booking/update/checked/${item.booking_id}`,
+                          { checked_status: "checked_out" },
+                          {
+                            headers: {
+                              Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                              )}`,
+                            },
+                          }
+                        );
+                        setData((prevData) =>
+                          prevData.map((booking) =>
+                            booking.booking_id === item.booking_id
+                              ? { ...booking, checked_status: "checked_out" }
+                              : booking
+                          )
+                        );
+                        toast.success(`${response.data.message}`);
+                      } catch (error) {
+                        toast.error(
+                          `Error: ${
+                            error.response?.data.message || error.message
+                          }`
+                        );
+                      }
+                    }}
+                  >
+                    Checkout
+                  </button>
+                )}
             </div>
           ))
         ) : (
@@ -230,80 +270,18 @@ function BookHistory() {
         )}
         {errors.api && <p className="text-red-500 mt-4">Error: {errors.api}</p>}
       </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">Cancellation Reason</h2>
-            <div className="mb-4">
-              <label className="block mb-2">
-                <input
-                  type="radio"
-                  name="cancellationReason"
-                  value="Booking by mistake"
-                  onChange={(e) => setCancellationReason(e.target.value)}
-                />
-                Booking by mistake
-              </label>
-              <label className="block mb-2">
-                <input
-                  type="radio"
-                  name="cancellationReason"
-                  value="Trip Cancelled"
-                  onChange={(e) => setCancellationReason(e.target.value)}
-                />
-                Trip Cancelled
-              </label>
-              <label className="block mb-2">
-                <input
-                  type="radio"
-                  name="cancellationReason"
-                  value="Personal reasons"
-                  onChange={(e) => setCancellationReason(e.target.value)}
-                />
-                Personal reasons
-              </label>
-              <label className="block">
-                <input
-                  type="radio"
-                  name="cancellationReason"
-                  value="Other"
-                  onChange={(e) => setCancellationReason(e.target.value)}
-                />
-                Other
-              </label>
-              {cancellationReason === "Other" && (
-                <input
-                  type="text"
-                  placeholder="Enter your reason"
-                  className="border px-3 py-2 rounded mt-2 w-full"
-                  value={customReason}
-                  onChange={(e) => setCustomReason(e.target.value)}
-                />
-              )}
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-300 rounded hover:bg-gray-400"
-                onClick={closeModal}
-              >
-                Close
-              </button>
-              <button
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded hover:bg-red-600"
-                onClick={handleCancelBooking}
-              >
-                Confirm Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {loading && (
-        <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>
-        </div>
-      )}
-      <ToastContainer />
+      <ToastContainer
+        position="bottom-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
       {showAlert && (
         <CustomAlert
           message={alertMessage}
@@ -315,4 +293,4 @@ function BookHistory() {
   );
 }
 
-export default BookHistory;
+export default AllBookings;

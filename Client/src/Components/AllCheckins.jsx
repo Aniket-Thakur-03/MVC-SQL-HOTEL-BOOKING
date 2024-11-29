@@ -1,29 +1,38 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import CustomAlert from "./Notification/CustomAlert";
 
 function AllCheckins() {
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [filter, setFilter] = useState("");
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
+  const triggerAlert = (message, type) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setShowAlert(true);
+  };
   const fetchCheckins = async () => {
     const today = new Date();
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/booking/${
+        `http://localhost:8000/api/booking/details/checkins?date=${
           today.toISOString().split("T")[0]
-        }/checkins`,
+        }`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
-      setData(response.data);
-      setFilteredData(response.data);
+      setData(response.data.bookings);
+      setFilteredData(response.data.bookings);
     } catch (error) {
       console.error("Error fetching booking details:", error);
-      setError(`${error.response?.message || error.message}`);
+      setError(`${error.response?.data.message || error.message}`);
     }
   };
   const handleFilter = () => {
@@ -40,8 +49,8 @@ function AllCheckins() {
   const handleConfirmBooking = async (id) => {
     try {
       const response = await axios.patch(
-        `http://localhost:8000/api/booking/${id}/status`,
-        { status: "confirmed" },
+        `http://localhost:8000/api/booking/update/booking/confirm/${id}`,
+        { booking_status: "confirmed", checked_status: "checked_in" },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -51,13 +60,13 @@ function AllCheckins() {
       setFilteredData((prevData) =>
         prevData.map((item) =>
           item.booking_id === id
-            ? { ...item, status: response.data.status }
+            ? { ...item, booking_status: response.data.booking.booking_status }
             : item
         )
       );
-      alert("Booking confirmed successfully!");
+      triggerAlert(`${response.data.message}`, "success");
     } catch (error) {
-      alert(`${error.response?.data?.message || error.message}`);
+      triggerAlert(`${error.response?.data.message || error.message}`);
     }
   };
 
@@ -112,7 +121,7 @@ function AllCheckins() {
           <div
             key={item.booking_id}
             className={`border rounded-lg p-4 ${
-              item.status === "confirmed" ? "bg-green-100" : "bg-white"
+              item.booking_status === "confirmed" ? "bg-green-100" : "bg-white"
             }`}
           >
             <p className="text-sm text-gray-600 mb-1">
@@ -120,6 +129,12 @@ function AllCheckins() {
             </p>
             <p className="text-sm text-gray-600 mb-1">
               <strong>User Id:</strong> {item.user_id}
+            </p>
+            <p className="text-sm text-gray-600 mb-1">
+              <strong>Guest Phone No:</strong> {item.guest_phone_no}
+            </p>
+            <p className="text-sm text-gray-600 mb-1">
+              <strong>Guest Email:</strong> {item.guest_email}
             </p>
             <p className="text-sm text-gray-600 mb-1">
               <strong>Guest Name:</strong> {item.guest_name}
@@ -133,19 +148,30 @@ function AllCheckins() {
               {new Date(item.check_out_date).toLocaleDateString()}
             </p>
             <p className="text-sm text-gray-600 mb-1">
-              <strong>Room Type:</strong> {item.room_type}
+              <strong>Room Type:</strong> {item.Room.room_type}
             </p>
             <p className="text-sm text-gray-600 mb-1">
-              <strong>Price:</strong> ₹{item.price}
+              <strong>Price:</strong> ₹{item.Room.price}
             </p>
             <p className="text-sm text-gray-600 mb-1">
               <strong>Payment status:</strong> {item.payment_status}
             </p>
             <p className="text-sm text-gray-600 mb-1">
-              <strong>status:</strong> {item.status}
+              <strong>Booking status:</strong>{" "}
+              <span
+                className={`${
+                  item.booking_status === "cancelled"
+                    ? "text-red-600"
+                    : item.booking_status === "confirmed"
+                    ? "text-green-600"
+                    : "text-gray-600"
+                }`}
+              >
+                {item.booking_status}
+              </span>
             </p>
 
-            {item.status !== "confirmed" && (
+            {item.booking_status === "pending" && (
               <button
                 className="mt-4 px-4 py-2 bg-accent text-white rounded hover:bg-accent-dark transition"
                 onClick={() => handleConfirmBooking(item.booking_id)}
@@ -156,6 +182,13 @@ function AllCheckins() {
           </div>
         ))}
       </div>
+      {showAlert && (
+        <CustomAlert
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setShowAlert(false)}
+        />
+      )}
     </div>
   );
 }

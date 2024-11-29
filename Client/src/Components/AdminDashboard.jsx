@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import AllCheckins from "./AllCheckins";
 import AllCheckouts from "./AllCheckouts";
 import UpdatePayment from "./UpdatePayment";
+import AllBookings from "./AllBookings";
 
 export default function AdminDashboard() {
   const [activeOption, setActiveOption] = useState("check-ins");
 
   const options = [
+    { name: "All Bookings", value: "all-bookings" },
     { name: "Check-ins", value: "check-ins" },
     { name: "Check-outs", value: "check-outs" },
     { name: "Update Payment Status", value: "update-payment-status" },
@@ -42,9 +44,19 @@ export default function AdminDashboard() {
             ? "Check-ins"
             : activeOption === "check-outs"
             ? "Check-outs"
-            : "Update Payment Status"}
+            : activeOption === "update-payment-status"
+            ? "Update Payment Status"
+            : "All Bookings"}
         </h1>
         <div className="bg-white p-6 rounded shadow-lg">
+          {activeOption === "all-bookings" && (
+            <>
+              <p>
+                Manage all the Bookings here. You can view and update records.
+              </p>
+              <AllBookings />
+            </>
+          )}
           {activeOption === "check-ins" && (
             <>
               <p>

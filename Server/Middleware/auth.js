@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-export const  adminOnly = (req, res, next) =>{
+export const adminOnly = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
   if (!token)
     return res
@@ -7,7 +7,7 @@ export const  adminOnly = (req, res, next) =>{
       .json({ message: "Access denied. No token provided." });
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const decoded = jwt.verify(token, "thak3r02an1ket8283acccess");
     if (decoded.role !== "admin") {
       return res.status(403).json({ message: "Access denied. Admins only." });
     }
@@ -22,7 +22,7 @@ export const  adminOnly = (req, res, next) =>{
       res.status(400).json({ message: "Invalid token." });
     }
   }
-}
+};
 
 export function authenticateTokenUser(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
@@ -35,7 +35,7 @@ export function authenticateTokenUser(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const decoded = jwt.verify(token, "thak3r02an1ket8283acccess");
     // console.log("Decoded token:", decoded);
     req.user = decoded;
     next();

@@ -12,8 +12,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
 
-
-
 function RoomDetails() {
   const today = new Date();
   function getTomorrowDate() {
@@ -27,13 +25,13 @@ function RoomDetails() {
   }
   useEffect(() => {
     if (!localStorage.getItem("token")) {
-      triggerAlert("User logged off, Please sign in again","error");
+      triggerAlert("User logged off, Please sign in again", "error");
       window.location.href = "/";
     }
   });
   const [showAlert, setShowAlert] = useState(false);
-const [alertMessage, setAlertMessage] = useState('');
-const [alertType, setAlertType] = useState('success');
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
   const [tomorrowDate, setTomorrowDate] = useState(getTomorrowDate);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(tomorrowDate);
@@ -44,7 +42,7 @@ const [alertType, setAlertType] = useState('success');
   const [address, setAddress] = useState("");
   const [request, setRequest] = useState("");
   const [error, setError] = useState({});
-  const [loading, setLoading]= useState(false);
+  const [loading, setLoading] = useState(false);
   const { rooms, adults, kids } = useContext(RoomContext);
   const navigate = useNavigate();
   const { id } = useParams();
@@ -84,15 +82,15 @@ const [alertType, setAlertType] = useState('success');
   });
   useEffect(() => {
     if (error == "Session expired. Please log in again.") {
-      triggerAlert(`${error}`,'error');
+      triggerAlert(`${error}`, "error");
       localStorage.removeItem("token");
       window.location.href = "/";
     } else if (error == "Access denied. No token provided.") {
-      triggerAlert(`${error} Please sign in`,'error');
+      triggerAlert(`${error} Please sign in`, "error");
       localStorage.removeItem("token");
       window.location.href = "/";
     } else if (error == "Invalid Token") {
-      triggerAlert(`${error}! Please Sign In once again`,'error');
+      triggerAlert(`${error}! Please Sign In once again`, "error");
       localStorage.removeItem("token");
       window.location.href = "/";
     }
@@ -104,7 +102,7 @@ const [alertType, setAlertType] = useState('success');
     if (validation.success) {
       try {
         setLoading(true);
-        const values = {
+        const bookingData = {
           user_id: getUserUserid(localStorage.getItem("token")),
           guest_name: guestName,
           guest_email: email,
@@ -115,16 +113,17 @@ const [alertType, setAlertType] = useState('success');
           booking_status: "pending",
           payment_status: "unpaid",
           special_requests: request,
-          aadhar_card_no: aadharCardNo,
+          guest_aadhar_card: aadharCardNo,
           no_of_adults: adults,
           no_of_kids: kids,
-          payment_due: price,
+          payment_due: parseInt(price * 1.12),
           room_id: id,
-          checked_status:"not_checked"
+          checked_status: "not_checked",
         };
+        console.log(bookingData);
         const response = await axios.post(
           "http://localhost:8000/api/booking/createbooking",
-          values,
+          { bookingData },
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -135,9 +134,12 @@ const [alertType, setAlertType] = useState('success');
         toast.success(`${response.data.message}`);
         setTimeout(() => navigate("/"), 2000);
       } catch (error) {
-        triggerAlert(`${error.response?.data.message || error.message}`, 'error');
+        triggerAlert(
+          `${error.response?.data.message || error.message}`,
+          "error"
+        );
         setError(`${error.response?.data.message || error.message}`);
-      }finally{
+      } finally {
         setLoading(false);
       }
     } else {
@@ -307,8 +309,9 @@ const [alertType, setAlertType] = useState('success');
                   className="h-[60px] btn btn-lg btn-primary w-full"
                   onClick={(e) => handleSubmit(e)}
                 >
-                  Book now for ₹{price}
+                  Book now for ₹{(price * 1.12).toFixed(2)}
                 </button>
+                <sub className="text-center">*Price calculated with GST</sub>
               </div>
             </div>
           </form>

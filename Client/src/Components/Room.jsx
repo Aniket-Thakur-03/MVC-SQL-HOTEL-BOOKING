@@ -8,8 +8,8 @@ const Room = ({ room }) => {
   const [noofrooms, setNoofrooms] = useState(0);
   const { id, name, image, maxAdults, maxPerson, description, price } = room;
   const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
-  const [alertType, setAlertType] = useState('success');
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
   const triggerAlert = (message, type) => {
     setAlertMessage(message);
     setAlertType(type);
@@ -22,7 +22,7 @@ const Room = ({ room }) => {
       );
       setNoofrooms(response.data.no_of_rooms);
     } catch (error) {
-      alert(`${error.message || error.response?.data.message}`);
+      triggerAlert(`${error.message || error.response?.data.message}`);
       setNoofrooms(-1);
     }
   };
@@ -31,9 +31,9 @@ const Room = ({ room }) => {
       setIsLoggedIn(false);
     }
   }, []);
-  // useEffect(() => {
-  //   getNoRooms(id);
-  // }, []);
+  useEffect(() => {
+    getNoRooms(id);
+  }, []);
   return (
     <div className="bg-white shadow-2xl min-h-[500px] group">
       <div className="overfolw-hidden">
@@ -71,13 +71,28 @@ const Room = ({ room }) => {
         </p>
       </div>
       <div>
-        {isLoggedIn ? noofrooms > 0 ? (
-            <Link to={`/room/${id}`}  className="btn btn-secondary btn-sm max-w-[240px] mx-auto">Book for ₹{price}</Link>
+        {isLoggedIn ? (
+          noofrooms > 0 ? (
+            <Link
+              to={`/room/${id}`}
+              className="btn btn-secondary btn-sm max-w-[240px] mx-auto"
+            >
+              Book for ₹{price}
+            </Link>
+          ) : (
+            <button
+              className="btn bg-primary btn-sm max-w-[240px] mx-auto disabled:opacity-40"
+              title="Room unavailable"
+              onClick={() =>
+                triggerAlert("Room not avaiable to book!", "error")
+              }
+            >
+              Book for ₹{price}
+            </button>
+          )
         ) : (
-          <button className="btn bg-primary btn-sm max-w-[240px] mx-auto disabled:opacity-40" title="Room unavailable" onClick={() =>  triggerAlert('Room not avaiable to book!', 'error')}>Book for ₹{price}</button>
-        ): (
           <p
-            onClick={() =>  triggerAlert('Please Login to book!', 'error')}
+            onClick={() => triggerAlert("Please Login to book!", "error")}
             className="cursor-not-allowed btn btn-secondary btn-sm max-w-[240px] mx-auto"
           >
             Book for ₹{price}

@@ -8,14 +8,14 @@ const VerifyEmail = () => {
   const navigate = useNavigate();
   const verifyEmail = async (token) => {
     try {
-      const response = await axios.get(
+      const response = await axios.patch(
         `http://localhost:8000/api/users/verifyemail?token=${token}`
       );
       setStatus("success");
       setMessage(response.data.message);
     } catch (error) {
       setStatus("error");
-      setMessage(error.response?.message);
+      setMessage(error.response?.message || error.message);
     }
   };
   useEffect(() => {

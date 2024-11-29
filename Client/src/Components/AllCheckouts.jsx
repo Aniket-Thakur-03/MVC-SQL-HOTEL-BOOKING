@@ -1,11 +1,19 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-
+import CustomAlert from "./Notification/CustomAlert";
 function AllCheckouts() {
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
   const [error, setError] = useState(null);
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [filter, setFilter] = useState("");
+  const triggerAlert = (message, type) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setShowAlert(true);
+  };
 
   const fetchCheckouts = async () => {
     const today = new Date();
@@ -13,15 +21,15 @@ function AllCheckouts() {
     console.log(today, formattedDate);
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/booking/${formattedDate}/checkouts`,
+        `http://localhost:8000/api/booking/details/checkouts?date=${formattedDate}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );
-      setData(response.data);
-      setFilteredData(response.data);
+      setData(response.data.bookings);
+      setFilteredData(response.data.bookings);
     } catch (error) {
       console.error("Error fetching booking details:", error);
       setError(`${error.response?.data?.message || error.message}`);
@@ -42,8 +50,8 @@ function AllCheckouts() {
   const handleCheckout = async (id) => {
     try {
       const response = await axios.patch(
-        `http://localhost:8000/api/booking/${id}/staystatus`,
-        { stay_status: "stayed" },
+        `http://localhost:8000/api/booking/update/checked/${id}`,
+        { checked_status: "checked_out" },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -53,13 +61,16 @@ function AllCheckouts() {
       setFilteredData((prevData) =>
         prevData.map((item) =>
           item.booking_id === id
-            ? { ...item, stay_status: response.data.stay_status }
+            ? { ...item, checked_status: response.data.booking.checked_status }
             : item
         )
       );
-      alert("Checkout completed successfully!");
+      triggerAlert("Checkout completed successfully!", "success");
     } catch (error) {
-      alert(`${error.response?.data?.message || error.message}`);
+      triggerAlert(
+        `${error.response?.data?.message || error.message}`,
+        "error"
+      );
     }
   };
 
@@ -116,7 +127,9 @@ function AllCheckouts() {
           <div
             key={item.booking_id}
             className={`border rounded-lg p-4 ${
-              item.stay_status === "stayed" ? "bg-green-100" : "bg-white"
+              item.checked_status === "checked_out"
+                ? "bg-green-100"
+                : "bg-white"
             }`}
           >
             <p className="text-sm text-gray-600 mb-1">
@@ -129,6 +142,12 @@ function AllCheckouts() {
               <strong>Guest Name:</strong> {item.guest_name}
             </p>
             <p className="text-sm text-gray-600 mb-1">
+              <strong>Guest Email:</strong> {item.guest_email}
+            </p>
+            <p className="text-sm text-gray-600 mb-1">
+              <strong>Guest Phone No:</strong> {item.guest_phone_no}
+            </p>
+            <p className="text-sm text-gray-600 mb-1">
               <strong>Check-in Date:</strong>{" "}
               {new Date(item.check_in_date).toLocaleDateString()}
             </p>
@@ -137,32 +156,67 @@ function AllCheckouts() {
               {new Date(item.check_out_date).toLocaleDateString()}
             </p>
             <p className="text-sm text-gray-600 mb-1">
-              <strong>Room Type:</strong> {item.room_type}
+              <strong>Room Type:</strong> {item.Room.room_type}
+            </p>
+            <p className="text-sm text-gray-600 mb-1">
+              <strong>Payment Due:</strong> ₹{item.payment_due}
             </p>
             <p className="text-sm text-gray-600 mb-1">
               <strong>Payment Due:</strong> ₹{item.payment_due}
             </p>
             <p
               className={`text-sm font-semibold ${
-                item.stay_status === "stayed"
+                item.booking_status === "confirmed"
                   ? "text-green-600"
-                  : "text-red-600"
+                  : "text-black" || item.booking_status === "cancelled"
+                  ? "text-red-600"
+                  : "text-black" || item.checked_status === "pending"
+                  ? "text-blue-600"
+                  : "text-black"
               }`}
             >
-              <strong>Check Status:</strong> {item.stay_status}
+              <strong>Booking Status:</strong> {item.booking_status}
+            </p>
+            <p
+              className={`text-sm font-semibold ${
+                item.checked_status === "checked_out"
+                  ? "text-green-600"
+                  : "text-black" || item.checked_status === "not_checked"
+                  ? "text-red-600"
+                  : "text-black" || item.checked_status === "checked_in"
+                  ? "text-blue-600"
+                  : "text-black"
+              }`}
+            >
+              <strong>Check Status:</strong>{" "}
+              {item.checked_status === "not_checked"
+                ? `Not Checked`
+                : item.checked_status === "checked_in"
+                ? `Checked In`
+                : item.checked_status === "checked_out"
+                ? `Checked Out`
+                : null}
             </p>
 
-            {item.stay_status !== "stayed" && (
-              <button
-                className="mt-4 px-4 py-2 bg-accent text-white rounded hover:bg-accent-dark transition"
-                onClick={() => handleCheckout(item.booking_id)}
-              >
-                Checkout
-              </button>
-            )}
+            {item.checked_status !== "checked_out" &&
+              item.booking_status !== "cancelled" && (
+                <button
+                  className="mt-4 px-4 py-2 bg-accent text-white rounded hover:bg-accent-dark transition"
+                  onClick={() => handleCheckout(item.booking_id)}
+                >
+                  Checkout
+                </button>
+              )}
           </div>
         ))}
       </div>
+      {showAlert && (
+        <CustomAlert
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setShowAlert(false)}
+        />
+      )}
     </div>
   );
 }

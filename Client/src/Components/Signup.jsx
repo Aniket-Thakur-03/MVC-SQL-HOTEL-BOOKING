@@ -23,7 +23,7 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
-  const [loading, setLoading]= useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -42,14 +42,14 @@ function Signup() {
         const responseemail = await response.data.email;
         toast.success(`${response.data.message}`);
         setErrors({});
-        setTimeout(()=>navigate("/checkemail", {state: responseemail}),2000);
+        setTimeout(() => navigate("/checkemail"), 2000);
       } catch (error) {
         console.error("Signup error:", error.response?.data);
         setErrors({
           api: `${error.response?.data.message || error.message}`,
-        })
-      }finally{
-        setLoading(false)
+        });
+      } finally {
+        setLoading(false);
       }
     } else {
       const fieldErrors = validation.error.format();

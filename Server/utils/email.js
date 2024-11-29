@@ -1,11 +1,11 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config({
-  path:"./.env"
-})
+  path: "./.env",
+});
 import nodemailer from "nodemailer";
 import {
-  // sendBookingCancellationEmailHTMLFormat,
-  // sendBookingCreationEmailHTMLFormat,
+  sendBookCancelEmailHTMLFormat,
+  sendBookCreateHTMLFormat,
   sendVerificationEmailHTMLFormat,
 } from "./emailHTMLformat.js";
 
@@ -14,8 +14,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: process.env.GOOGLE_MAIL,
-    pass: process.env.GOOGLE_APP_PASSWORD,
+    user: "thakur02aniket@gmail.com",
+    pass: "wyqqhmgslwfoiwtu",
   },
 });
 
@@ -26,22 +26,26 @@ export const sendVerificationEmail = async (userEmail, verification_token) => {
   return await sendEmail(userEmail, subject, html);
 };
 
-// export const sendBookingCreationEmail = async (guest_email, booking_id) => {
-//   const subject = "Booking Created";
-//   const html = sendBookingCreationEmailHTMLFormat(booking_id);
-//   return await sendEmail(guest_email, subject, html);
-// };
+export const sendBookingCreationEmail = async (guest_email, booking_id) => {
+  const subject = `Booking Created `;
+  const html = sendBookCreateHTMLFormat(booking_id);
+  return await sendEmail(guest_email, subject, html);
+};
 
-// export const sendBookingCancellationEmail = async (guest_email, booking_id) => {
-//   const subject = "Booking Cancelled";
-//   const html = sendBookingCancellationEmailHTMLFormat(booking_id);
-//   return await sendEmail(guest_email, subject, html);
-// };
+export const sendBookingCancellationEmail = async (
+  guest_email,
+  booking_id,
+  cancellation_reasons
+) => {
+  const subject = "Booking Cancelled";
+  const html = sendBookCancelEmailHTMLFormat(booking_id, cancellation_reasons);
+  return await sendEmail(guest_email, subject, html);
+};
 
 export const sendEmail = async (to, subject, html) => {
   try {
     const info = await transporter.sendMail({
-      from: process.env.GOOGLE_MAIL,
+      from: "thakur02aniket@gmail.com",
       to,
       subject,
       html,

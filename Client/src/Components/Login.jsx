@@ -52,7 +52,7 @@ function Login() {
       } catch (error) {
         console.error("Login error:", error.response?.data);
         setErrors({
-          api: `${error.response?.message || error.message}`,
+          api: `${error.response?.data.message || error.message}`,
         });
       }
     } else {
