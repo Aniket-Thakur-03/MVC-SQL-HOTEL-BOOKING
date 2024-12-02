@@ -8,8 +8,12 @@ import {
 
 export const createBooking = async (req, res) => {
   const { bookingData } = req.body;
+  const {user_id} = req.user;
   if (!bookingData) {
     return res.status(400).json({ message: "No data provided for booking" });
+  }
+  if(bookingData.user_id !== user_id){
+    return res.status(400).json({message:"User id not same"});
   }
   try {
     const checkRoomAvailability = await Room.findOne({

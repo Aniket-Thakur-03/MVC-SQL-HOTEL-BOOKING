@@ -1,7 +1,5 @@
 import dotenv from "dotenv";
-dotenv.config({
-  path: "./.env",
-});
+dotenv.config();
 import nodemailer from "nodemailer";
 import {
   sendBookCancelEmailHTMLFormat,
@@ -14,8 +12,8 @@ const transporter = nodemailer.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: "thakur02aniket@gmail.com",
-    pass: "wyqqhmgslwfoiwtu",
+    user: process.env.GOOGLE_MAIL,
+    pass: process.env.GOOGLE_APP_PASSWORD,
   },
 });
 
@@ -45,7 +43,7 @@ export const sendBookingCancellationEmail = async (
 export const sendEmail = async (to, subject, html) => {
   try {
     const info = await transporter.sendMail({
-      from: "thakur02aniket@gmail.com",
+      from: process.env.GOOGLE_MAIL,
       to,
       subject,
       html,

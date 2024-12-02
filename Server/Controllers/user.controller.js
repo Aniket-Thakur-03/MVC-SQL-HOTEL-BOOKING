@@ -1,3 +1,5 @@
+import dotenv from "dotenv";
+dotenv.config();
 import { User } from "../Models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -57,9 +59,9 @@ export const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      "thak3r02an1ket8283acccess",
+      process.env.ACCES_TOKEN_SECRET,
       {
-        expiresIn: "1h",
+        expiresIn: process.env.ACCES_TOKEN_EXPIRY,
       }
     );
 
