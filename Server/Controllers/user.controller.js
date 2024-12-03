@@ -85,42 +85,76 @@ export const verifyUserEmail = async (req, res) => {
   }
 };
 
-export const updateUserInfo = async (req,res) => {
-  const {user_id} = req.user;
-  if(req.params.id!==user_id){
-    return res.status(400).json({message:"access unauthorized, id different"});
+export const updateUserInfo = async (req, res) => {
+  const { user_id } = req.user;
+  if (req.params.id !== user_id) {
+    return res
+      .status(400)
+      .json({ message: "access unauthorized, id different" });
   }
   try {
-    const {newusername,newpassword} = req.body;
-    if(!password){
-      const[rowsUpdated, updatedRows] = await User.update({username:newusername},{where:{user_id:user_id},returning:true});
-      if(rowsUpdated===0) return res.status(400).message({message:"No user updated"});
+    const { newusername, newpassword } = req.body;
+    if (!password) {
+      const [rowsUpdated, updatedRows] = await User.update(
+        { username: newusername },
+        { where: { user_id: user_id }, returning: true }
+      );
+      if (rowsUpdated === 0)
+        return res.status(400).message({ message: "No user updated" });
       const token = jwt.sign({
-        user_id:updatedRows[0].user_id,
-        username:updatedRows[0].username,
-        role:updatedRows[0].role,
-        email:updatedRows[0].email,
-      })
-      return res.status(200).json({message:"User updated successfully", token:token});
+        user_id: updatedRows[0].user_id,
+        username: updatedRows[0].username,
+        role: updatedRows[0].role,
+        email: updatedRows[0].email,
+      });
+      return res
+        .status(200)
+        .json({ message: "User updated successfully", token: token });
     }
-    if(!newusername){
-      const[rowsUpdated, updatedRows] = await User.update({password:newpassword},{where:{user_id:user_id},returning:true});
-      if(rowsUpdated===0) return res.status(400).message({message:"No user updated"});
-      return res.status(200).json({message:"User updated successfully", user:updatedRows[0]});
+    if (!newusername) {
+      const [rowsUpdated, updatedRows] = await User.update(
+        { password: newpassword },
+        { where: { user_id: user_id }, returning: true }
+      );
+      if (rowsUpdated === 0)
+        return res.status(400).message({ message: "No user updated" });
+      return res
+        .status(200)
+        .json({ message: "User updated successfully", user: updatedRows[0] });
     }
-    if(newpassword && newusername){
-      const[rowsUpdated, updatedRows] = await User.update({username:newusername,password:newpassword},{where:{user_id:user_id},returning:true});
-      if(rowsUpdated===0) return res.status(400).message({message:"No user updated"});
+    if (newpassword && newusername) {
+      const [rowsUpdated, updatedRows] = await User.update(
+        { username: newusername, password: newpassword },
+        { where: { user_id: user_id }, returning: true }
+      );
+      if (rowsUpdated === 0)
+        return res.status(400).message({ message: "No user updated" });
       const token = jwt.sign({
-        user_id:updatedRows[0].user_id,
-        username:updatedRows[0].username,
-        role:updatedRows[0].role,
-        email:updatedRows[0].email,
-      })
-      return res.status(200).json({message:"User updated successfully", token:token});
+        user_id: updatedRows[0].user_id,
+        username: updatedRows[0].username,
+        role: updatedRows[0].role,
+        email: updatedRows[0].email,
+      });
+      return res
+        .status(200)
+        .json({ message: "User updated successfully", token: token });
     }
   } catch (error) {
-    console.error(error)
-    return res.status(500).json({message:error.message});
+    console.error(error);
+    return res.status(500).json({ message: error.message });
   }
-}
+};
+
+export const findUser = async (req, res) => {
+  const { email } = req.user;
+  try {
+    const user = await User.findOne({ where: { email: email } });
+    if (!user) {
+      return res.status(400).json({ message: "user does not exist" });
+    }
+    return res.status(200).json({ user: user });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};

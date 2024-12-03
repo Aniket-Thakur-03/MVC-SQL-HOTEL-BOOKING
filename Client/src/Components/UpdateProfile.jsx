@@ -1,13 +1,13 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z
+  newUsername: z.string().min(4, "Username should have atleast 4 characters"),
+  newPassword: z
     .string()
     .min(8, "Password must have at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -20,17 +20,36 @@ const loginSchema = z.object({
 });
 function getUserRole(token) {
   const decoded = jwtDecode(token);
-  return decoded.role;
+  return decoded;
 }
-function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function UpdateProfile() {
+  useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      window.location.href === "/";
+    }
+    async function getUserDetails() {
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/users/find/user",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        setNewUsername(response.data.user.username);
+        setNewPassword(response.data.user);
+      } catch (error) {}
+    }
+  }, []);
+  const [newUsername, setNewUsername] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const formData = { email, password };
+    const formData = { newUsername, newPassword };
     const validation = loginSchema.safeParse(formData);
 
     if (validation.success) {
@@ -44,11 +63,6 @@ function Login() {
         setErrors({});
         localStorage.setItem("token", `${response.data.token}`);
         localStorage.setItem("isLoggedIn", true);
-        if (getUserRole(localStorage.getItem("token")) === "admin") {
-          navigate("/admin/dashboard");
-        } else {
-          navigate("/");
-        }
       } catch (error) {
         console.error("Login error:", error.response?.data);
         setErrors({
@@ -80,12 +94,12 @@ function Login() {
               Email
             </label>
             <input
-              type="email"
-              id="email"
-              placeholder="Enter your email"
+              type="text"
+              id="text"
+              placeholder="Enter your New Username"
               className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={newUsername}
+              onChange={(e) => setNewUsername(e.target.value)}
             />
             {errors.email && (
               <p className="text-sm text-red-600">{errors.email}</p>
@@ -101,10 +115,10 @@ function Login() {
             <input
               type="password"
               id="password"
-              placeholder="Enter your password"
+              placeholder="Enter your New password"
               className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
             />
             {errors.password && (
               <p className="text-sm text-red-600">{errors.password}</p>
@@ -114,7 +128,7 @@ function Login() {
             type="submit"
             className="w-full px-4 py-3 text-lg font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           >
-            Login
+            Update
           </button>
           {errors.api && (
             <p className="text-sm text-red-600 mt-2">{errors.api}</p>
@@ -137,4 +151,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default UpdateProfile;
