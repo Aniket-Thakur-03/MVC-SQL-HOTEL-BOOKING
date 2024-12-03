@@ -11,7 +11,7 @@ import {
   updateConfirmBookingStatus,
   updatePaymentStatus,
 } from "../Controllers/booking.controller.js";
-import {adminOnly, authenticateTokenUser } from "../Middleware/auth.js";
+import {adminOnly, authenticateTokenUser } from "../Middleware/tokenverify.js";
 
 const bookingRouter = Router();
 

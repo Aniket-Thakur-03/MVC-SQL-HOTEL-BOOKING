@@ -1,5 +1,9 @@
 import { Room } from "../Models/room.model.js";
 
+export const createRoom = async (req,res) => {
+    
+}
+
 export const avaialableRooms = async(req,res)=>{
     try {
         const room_id = req.params.id;

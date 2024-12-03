@@ -8,9 +8,6 @@ import { sendVerificationEmail } from "../utils/email.js";
 export const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    if (!username || !email || !password) {
-      return res.status(400).json({ message: "please fill all fields" });
-    }
     const existingUser = await User.findOne({ where: { email: email } });
     if (existingUser) {
       return res
@@ -35,9 +32,6 @@ export const createUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "please fill all fields" });
-    }
     const user = await User.findOne({ where: { email: email } });
     if (!user) {
       return res
@@ -59,9 +53,9 @@ export const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
       },
-      process.env.ACCES_TOKEN_SECRET,
+      process.env.ACCESS_TOKEN_SECRET,
       {
-        expiresIn: process.env.ACCES_TOKEN_EXPIRY,
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
       }
     );
 
@@ -90,3 +84,43 @@ export const verifyUserEmail = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const updateUserInfo = async (req,res) => {
+  const {user_id} = req.user;
+  if(req.params.id!==user_id){
+    return res.status(400).json({message:"access unauthorized, id different"});
+  }
+  try {
+    const {newusername,newpassword} = req.body;
+    if(!password){
+      const[rowsUpdated, updatedRows] = await User.update({username:newusername},{where:{user_id:user_id},returning:true});
+      if(rowsUpdated===0) return res.status(400).message({message:"No user updated"});
+      const token = jwt.sign({
+        user_id:updatedRows[0].user_id,
+        username:updatedRows[0].username,
+        role:updatedRows[0].role,
+        email:updatedRows[0].email,
+      })
+      return res.status(200).json({message:"User updated successfully", token:token});
+    }
+    if(!newusername){
+      const[rowsUpdated, updatedRows] = await User.update({password:newpassword},{where:{user_id:user_id},returning:true});
+      if(rowsUpdated===0) return res.status(400).message({message:"No user updated"});
+      return res.status(200).json({message:"User updated successfully", user:updatedRows[0]});
+    }
+    if(newpassword && newusername){
+      const[rowsUpdated, updatedRows] = await User.update({username:newusername,password:newpassword},{where:{user_id:user_id},returning:true});
+      if(rowsUpdated===0) return res.status(400).message({message:"No user updated"});
+      const token = jwt.sign({
+        user_id:updatedRows[0].user_id,
+        username:updatedRows[0].username,
+        role:updatedRows[0].role,
+        email:updatedRows[0].email,
+      })
+      return res.status(200).json({message:"User updated successfully", token:token});
+    }
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({message:error.message});
+  }
+}

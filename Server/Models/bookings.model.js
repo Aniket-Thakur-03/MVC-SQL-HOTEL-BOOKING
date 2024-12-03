@@ -28,9 +28,22 @@ const Booking = sequelize.define(
         key: "room_id",
       },
     },
+    meal_chosen:{
+      type:DataTypes.BOOLEAN,
+      allowNull:false,
+      defaultValue:false
+    },
+    meal_price:{
+      type:DataTypes.INTEGER,
+      allowNull:false,
+      defaultValue:0
+    },
     payment_due: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      validate:{
+        min:0
+      }
     },
     booking_status: {
       type: DataTypes.STRING(20),
@@ -100,9 +113,13 @@ const Booking = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
+      validate:{
+        min:0
+      }
     },
     cancellation_reasons: {
       type: DataTypes.TEXT,
+      defaultValue:null
     },
   },
   {
@@ -111,7 +128,26 @@ const Booking = sequelize.define(
     schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
-  }
+    hooks:{
+      beforeValidate:(booking)=>{
+        if(booking.payment_status !=="unpaid" || booking.payment_status !=="partial"|| booking.payment_status !=="paid"){
+          throw new Error("wrong payment status");
+        }
+        if(booking.checked_status !=="not_checked" || booking.checked_status !=="checked_in"|| booking.checked_status !=="checked_out"){
+          throw new Error("wrong check status");
+        }
+        if(booking.booking_status !=="pending" || booking.booking_status !=="confirmed"|| booking.booking_status !=="cancelled"){
+          throw new Error("wrong booking status");
+        }
+        if(booking.payment_due < 0){
+          throw new Error("payment due can't be negative");
+        }
+        if(booking.amount_paid < 0){
+          throw new Error("amount paid can't be negative");
+        }
+        }
+      }
+    }
 );
 
 User.hasMany(Booking, {
