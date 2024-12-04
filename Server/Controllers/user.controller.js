@@ -87,14 +87,14 @@ export const verifyUserEmail = async (req, res) => {
 
 export const updateUserInfo = async (req, res) => {
   const { user_id } = req.user;
-  if (req.params.id !== user_id) {
+  if (Number(req.params.id) !== user_id) {
     return res
       .status(400)
       .json({ message: "access unauthorized, id different" });
   }
   try {
     const { newusername, newpassword } = req.body;
-    if (!password) {
+    if (!newpassword) {
       const [rowsUpdated, updatedRows] = await User.update(
         { username: newusername },
         { where: { user_id: user_id }, returning: true }
@@ -134,6 +134,8 @@ export const updateUserInfo = async (req, res) => {
         username: updatedRows[0].username,
         role: updatedRows[0].role,
         email: updatedRows[0].email,
+      },process.env.ACCESS_TOKEN_SECRET,{
+        expiresIn:process.env.ACCESS_TOKEN_EXPIRY
       });
       return res
         .status(200)
@@ -145,16 +147,22 @@ export const updateUserInfo = async (req, res) => {
   }
 };
 
-export const findUser = async (req, res) => {
-  const { email } = req.user;
+export const verifyPassword = async (req,res) => {
+  const {user_id}=req.user;
+  const {password} = req.body;
   try {
-    const user = await User.findOne({ where: { email: email } });
-    if (!user) {
-      return res.status(400).json({ message: "user does not exist" });
+    const checkUser = await User.findOne({where:{user_id:user_id}});
+    if(!checkUser){
+      return res.status(400).json({message:"User doesn't exist"});
     }
-    return res.status(200).json({ user: user });
+    const passCheck = await bcrypt.compare(password,checkUser.password);
+    if(passCheck){
+      return res.status(200).json({message:"User password verified"});
+    }
+    else
+    return res.status(400).json({message:"Password Incorrect"});
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({message:error.message});
   }
-};
+}

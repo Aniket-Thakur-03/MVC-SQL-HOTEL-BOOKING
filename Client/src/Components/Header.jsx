@@ -118,6 +118,14 @@ export default function Header() {
                         </p>
                       </div>
                       <div className="border-t border-gray-200">
+                        <NavLink
+                        to="/update/profile"
+                          className="w-full px-4 py-2 text-left text-sm text-blue-500 hover:bg-blue-100"
+                        >
+                          Update Profile
+                        </NavLink>
+                      </div>
+                      <div className="border-t border-gray-200">
                         <button
                           onClick={handleSignOut}
                           className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-100"

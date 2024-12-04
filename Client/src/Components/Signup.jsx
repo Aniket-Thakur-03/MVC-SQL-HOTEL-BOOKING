@@ -39,7 +39,6 @@ function Signup() {
           "http://localhost:8000/api/users/register",
           formData
         );
-        const responseemail = await response.data.email;
         toast.success(`${response.data.message}`);
         setErrors({});
         setTimeout(() => navigate("/checkemail"), 2000);

@@ -21,6 +21,7 @@ import AdminDashboard from "./Components/AdminDashboard.jsx";
 import Unauthorized from "./Components/Unauthorized.jsx";
 import VerifyEmail from "./Components/VerifyEmail.jsx";
 import CheckEmail from "./Components/CheckEmail.jsx";
+import UpdateProfile from "./Components/UpdateProfile.jsx";
 function getUserRole(token) {
   const decoded = jwtDecode(token);
   return decoded.role;
@@ -92,6 +93,10 @@ const router = createBrowserRouter([
         path: "checkemail",
         element: <CheckEmail />,
       },
+      {
+        path:"update/profile",
+        element:<UpdateProfile/>
+      }
     ],
   },
 ]);

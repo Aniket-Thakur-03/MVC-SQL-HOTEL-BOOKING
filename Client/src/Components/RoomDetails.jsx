@@ -13,12 +13,20 @@ import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
 
 function RoomDetails() {
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
   const today = new Date();
   function getTomorrowDate() {
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
     return tomorrow;
   }
+  const triggerAlert = (message, type) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setShowAlert(true);
+  };
   function getUserUserid(token) {
     const decoded = jwtDecode(token);
     return decoded.user_id;
@@ -29,9 +37,7 @@ function RoomDetails() {
       window.location.href = "/";
     }
   });
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState("success");
+  
   const [tomorrowDate, setTomorrowDate] = useState(getTomorrowDate);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(tomorrowDate);
@@ -153,11 +159,7 @@ function RoomDetails() {
       });
     }
   };
-  const triggerAlert = (message, type) => {
-    setAlertMessage(message);
-    setAlertType(type);
-    setShowAlert(true);
-  };
+ 
 
   return (
     <section>

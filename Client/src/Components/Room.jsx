@@ -31,9 +31,9 @@ const Room = ({ room }) => {
       setIsLoggedIn(false);
     }
   }, []);
-  useEffect(() => {
-    getNoRooms(id);
-  }, []);
+  // useEffect(() => {
+  //   getNoRooms(id);
+  // }, []);
   return (
     <div className="bg-white shadow-2xl min-h-[500px] group">
       <div className="overfolw-hidden">
