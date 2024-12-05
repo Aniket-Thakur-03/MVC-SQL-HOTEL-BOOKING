@@ -28,21 +28,30 @@ export const Room = sequelize.define(
       allowNull:false,
       defaultValue:200,
       validate:{
-        min:100
+        min:{
+          args:100,
+          msg:"Meals price must be atleast ₹100"
+        }
       }
     },
     retail_price: {
       type: DataTypes.INTEGER,
       allowNull: false,
       validate:{
-        min:0
+        min:{
+          args:0,
+          msg:"Retail price can't be negative"
+        }
       }
     },
     selling_price:{
       type:DataTypes.INTEGER,
       allowNull:false,
       validate:{
-        min:0,
+        min:{
+          args:0,
+          msg:"Selling price can't be negative"
+        }
       }
     },
     no_of_rooms: {
@@ -50,8 +59,14 @@ export const Room = sequelize.define(
       defaultValue: 5,
       allowNull: false,
       validate: {
-        min: 0,
-        max: 5,
+        min: {
+          args:0,
+          msg:"The number of rooms must not decrease more than 0"
+        },
+        max: {
+          args:5,
+          msg: "The number of rooms must not exceed 5."
+        }
       },
     },
     image_link:{
@@ -67,15 +82,6 @@ export const Room = sequelize.define(
     updatedAt:"updated_at",
     hooks: {
       beforeValidate: (room) => {
-        if (room.no_of_rooms < 0 || room.no_of_rooms > 5) {
-          throw new Error("no_of_rooms must be between 0 and 5");
-        }
-        if(room.meals_price<100){
-          throw new Error("Meals price must be atleast ₹100");
-        }
-        if(room.retail_price<0){
-          throw new Error("Retail price must be greater than ₹0");
-        }
         if(room.selling_price>room.retail_price){
           throw new Error("Selling price must be less than retail price");
         }

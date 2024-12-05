@@ -42,15 +42,25 @@ const Booking = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       validate:{
-        min:0
+        min:{
+          args:0,
+          msg:"payment due can't be negative"
+        }
       }
+    },
+    room_price:{
+      type:DataTypes.INTEGER,
+      allowNull:false,
     },
     booking_status: {
       type: DataTypes.STRING(20),
       allowNull: false,
       defaultValue: "pending",
       validate: {
-        isIn: [["pending", "confirmed", "cancelled"]],
+        isIn: {
+          args:[["pending", "confirmed", "cancelled"]],
+          msg:"Wrong booking status"
+        }
       },
     },
     payment_status: {
@@ -58,7 +68,10 @@ const Booking = sequelize.define(
       allowNull: false,
       defaultValue: "unpaid",
       validate: {
-        isIn: [["unpaid", "partial", "paid"]],
+        isIn: {
+          args:[["unpaid", "partial", "paid"]],
+          msg:"Wrong payment status"
+        }
       },
     },
     checked_status: {
@@ -66,7 +79,10 @@ const Booking = sequelize.define(
       allowNull: false,
       defaultValue: "not_checked",
       validate: {
-        isIn: [["not_checked", "checked_in", "checked_out"]],
+        isIn: {
+          args:[["not_checked", "checked_in", "checked_out"]],
+          msg:"Wrong Check Status"
+        }
       },
     },
     guest_name: {
@@ -114,7 +130,10 @@ const Booking = sequelize.define(
       allowNull: false,
       defaultValue: 0,
       validate:{
-        min:0
+        min:{
+          args:0,
+          msg:"amount paid can't be negative"
+        }
       }
     },
     cancellation_reasons: {
@@ -128,25 +147,6 @@ const Booking = sequelize.define(
     schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
-    hooks:{
-      beforeValidate:(booking)=>{
-        if(booking.payment_status !=="unpaid" || booking.payment_status !=="partial"|| booking.payment_status !=="paid"){
-          throw new Error("wrong payment status");
-        }
-        if(booking.checked_status !=="not_checked" || booking.checked_status !=="checked_in"|| booking.checked_status !=="checked_out"){
-          throw new Error("wrong check status");
-        }
-        if(booking.booking_status !=="pending" || booking.booking_status !=="confirmed"|| booking.booking_status !=="cancelled"){
-          throw new Error("wrong booking status");
-        }
-        if(booking.payment_due < 0){
-          throw new Error("payment due can't be negative");
-        }
-        if(booking.amount_paid < 0){
-          throw new Error("amount paid can't be negative");
-        }
-        }
-      }
     }
 );
 

@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../dbconnection.js";
+import {v4 as uuidv4} from "uuid";
 import bcrypt from 'bcrypt';
 
 const User = sequelize.define('User',{
@@ -16,7 +17,12 @@ const User = sequelize.define('User',{
     email:{
         type:DataTypes.STRING,
         allowNull:false,
-        unique:true
+        unique:true,
+        validate:{
+            isEmail:{
+                msg:"Email must be of standard format",    
+            }
+        }
     },
     password:{
         type:DataTypes.STRING,
@@ -27,7 +33,10 @@ const User = sequelize.define('User',{
         defaultValue:'simple_user',
         allowNull:false,
         validate:{
-            isIn:[['simple_user','admin']]
+            isIn:{
+                args:[['simple_user','admin']],
+                msg:"Role must be user or admin"
+            }
         }
     },
     is_verified:{
@@ -51,10 +60,10 @@ const User = sequelize.define('User',{
                 const salt = await bcrypt.genSalt(10);
                 user.password = await bcrypt.hash(user.password, salt);
             }
-            user.verification_token = crypto.randomUUID();
+            user.verification_token = uuidv4();
         },
         beforeUpdate: async (user) => {
-            if (user.password) {
+            if (user.changed('password')) {
                 const salt = await bcrypt.genSalt(10);
                 user.password = await bcrypt.hash(user.password, salt);
             }

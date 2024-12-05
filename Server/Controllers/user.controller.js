@@ -92,58 +92,28 @@ export const updateUserInfo = async (req, res) => {
       .status(400)
       .json({ message: "access unauthorized, id different" });
   }
+  const {newusername, newpassword} =req.body;
   try {
-    const { newusername, newpassword } = req.body;
-    if (!newpassword) {
-      const [rowsUpdated, updatedRows] = await User.update(
-        { username: newusername },
-        { where: { user_id: user_id }, returning: true }
-      );
-      if (rowsUpdated === 0)
-        return res.status(400).message({ message: "No user updated" });
-      const token = jwt.sign({
-        user_id: updatedRows[0].user_id,
-        username: updatedRows[0].username,
-        role: updatedRows[0].role,
-        email: updatedRows[0].email,
-      });
-      return res
-        .status(200)
-        .json({ message: "User updated successfully", token: token });
+    const user = await User.findByPk(user_id);
+    if(!user){
+      return res.status(400).json({message:"User not found"});
     }
-    if (!newusername) {
-      const [rowsUpdated, updatedRows] = await User.update(
-        { password: newpassword },
-        { where: { user_id: user_id }, returning: true }
-      );
-      if (rowsUpdated === 0)
-        return res.status(400).message({ message: "No user updated" });
-      return res
-        .status(200)
-        .json({ message: "User updated successfully", user: updatedRows[0] });
-    }
-    if (newpassword && newusername) {
-      const [rowsUpdated, updatedRows] = await User.update(
-        { username: newusername, password: newpassword },
-        { where: { user_id: user_id }, returning: true }
-      );
-      if (rowsUpdated === 0)
-        return res.status(400).message({ message: "No user updated" });
-      const token = jwt.sign({
-        user_id: updatedRows[0].user_id,
-        username: updatedRows[0].username,
-        role: updatedRows[0].role,
-        email: updatedRows[0].email,
-      },process.env.ACCESS_TOKEN_SECRET,{
-        expiresIn:process.env.ACCESS_TOKEN_EXPIRY
-      });
-      return res
-        .status(200)
-        .json({ message: "User updated successfully", token: token });
-    }
+
+    if(newusername) user.username = newusername;
+    if(newpassword) user.password = newpassword;
+    const token = jwt.sign({
+      user_id:user_id,
+      username:newusername,
+      email:user.email,
+      role:user.role
+    },process.env.ACCESS_TOKEN_SECRET,{
+      expiresIn:process.env.ACCESS_TOKEN_EXPIRY
+    })
+    await user.save();
+    return res.status(200).json({message:"User updated successfully",token:token})
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({message:`Something went wrong, ${error.message}`});
   }
 };
 

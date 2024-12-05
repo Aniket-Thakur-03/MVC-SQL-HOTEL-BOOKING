@@ -1,7 +1,23 @@
 import { Room } from "../Models/room.model.js";
 
 export const createRoom = async (req,res) => {
-    
+    const {roomData} = req.body;
+    try {
+        const newRoom = await Room.create({
+            room_type: roomData.room_type,
+            max_adults: roomData.max_adults,
+            max_persons: roomData.max_persons,
+            meals_price: roomData.meals_price,
+            retail_price: roomData.retail_price,
+            selling_price: roomData.selling_price,
+            no_of_rooms: roomData.no_of_rooms,
+            image_link: roomData.image_link,
+        })
+        return res.json({room:newRoom});
+    } catch (error) {
+        console.error(error);
+        return res.json({message:error.message});
+    }
 }
 
 export const avaialableRooms = async(req,res)=>{

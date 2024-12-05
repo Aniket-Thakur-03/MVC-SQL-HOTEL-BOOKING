@@ -3,10 +3,10 @@ import cors from 'cors';
 import { userRouter } from './Routes/user.route.js';
 import { roomRouter } from './Routes/room.route.js';
 import { bookingRouter } from './Routes/booking.route.js';
-// import path from 'path';
-// import { fileURLToPath } from 'url';
-// const __filename =fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename =fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const app=express();
 
 app.use(cors({
@@ -18,6 +18,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use("/public",express.static(path.join(__dirname,"public")))
 
 
 app.use("/api/users",userRouter);

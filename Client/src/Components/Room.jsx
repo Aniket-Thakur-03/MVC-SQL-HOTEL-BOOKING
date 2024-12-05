@@ -71,8 +71,7 @@ const Room = ({ room }) => {
         </p>
       </div>
       <div>
-        {isLoggedIn ? (
-          noofrooms > 0 ? (
+        {isLoggedIn ?  (
             <Link
               to={`/room/${id}`}
               className="btn btn-secondary btn-sm max-w-[240px] mx-auto"
@@ -80,17 +79,6 @@ const Room = ({ room }) => {
               Book for ₹{price}
             </Link>
           ) : (
-            <button
-              className="btn bg-primary btn-sm max-w-[240px] mx-auto disabled:opacity-40"
-              title="Room unavailable"
-              onClick={() =>
-                triggerAlert("Room not avaiable to book!", "error")
-              }
-            >
-              Book for ₹{price}
-            </button>
-          )
-        ) : (
           <p
             onClick={() => triggerAlert("Please Login to book!", "error")}
             className="cursor-not-allowed btn btn-secondary btn-sm max-w-[240px] mx-auto"
