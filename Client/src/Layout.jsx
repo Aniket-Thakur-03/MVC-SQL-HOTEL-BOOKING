@@ -10,7 +10,8 @@ function Layout() {
     location.pathname === "/signup" ||
     location.pathname === "/unauthorized" ||
     location.pathname === "/checkemail" ||
-    location.pathname === "/update/profile"||
+    location.pathname === "/update/profile" ||
+    location.pathname === "/forget/password/:id" ||
     location.pathname === "/verifyemail";
   return (
     <RoomProvider>

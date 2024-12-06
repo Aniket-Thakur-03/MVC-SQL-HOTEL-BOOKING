@@ -28,29 +28,29 @@ const Booking = sequelize.define(
         key: "room_id",
       },
     },
-    meal_chosen:{
-      type:DataTypes.BOOLEAN,
-      allowNull:false,
-      defaultValue:false
+    meal_chosen: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
     },
-    meal_price:{
-      type:DataTypes.INTEGER,
-      allowNull:false,
-      defaultValue:0
+    meal_price: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     payment_due: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      validate:{
-        min:{
-          args:0,
-          msg:"payment due can't be negative"
-        }
-      }
+      validate: {
+        min: {
+          args: [[0]],
+          msg: "payment due can't be negative",
+        },
+      },
     },
-    room_price:{
-      type:DataTypes.INTEGER,
-      allowNull:false,
+    room_price: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     booking_status: {
       type: DataTypes.STRING(20),
@@ -58,9 +58,9 @@ const Booking = sequelize.define(
       defaultValue: "pending",
       validate: {
         isIn: {
-          args:[["pending", "confirmed", "cancelled"]],
-          msg:"Wrong booking status"
-        }
+          args: [["pending", "confirmed", "cancelled"]],
+          msg: "Wrong booking status",
+        },
       },
     },
     payment_status: {
@@ -69,9 +69,9 @@ const Booking = sequelize.define(
       defaultValue: "unpaid",
       validate: {
         isIn: {
-          args:[["unpaid", "partial", "paid"]],
-          msg:"Wrong payment status"
-        }
+          args: [["unpaid", "partial", "paid"]],
+          msg: "Wrong payment status",
+        },
       },
     },
     checked_status: {
@@ -80,9 +80,9 @@ const Booking = sequelize.define(
       defaultValue: "not_checked",
       validate: {
         isIn: {
-          args:[["not_checked", "checked_in", "checked_out"]],
-          msg:"Wrong Check Status"
-        }
+          args: [["not_checked", "checked_in", "checked_out"]],
+          msg: "Wrong Check Status",
+        },
       },
     },
     guest_name: {
@@ -129,16 +129,16 @@ const Booking = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
-      validate:{
-        min:{
-          args:0,
-          msg:"amount paid can't be negative"
-        }
-      }
+      validate: {
+        min: {
+          args: [[0]],
+          msg: "amount paid can't be negative",
+        },
+      },
     },
     cancellation_reasons: {
       type: DataTypes.TEXT,
-      defaultValue:null
+      defaultValue: null,
     },
   },
   {
@@ -147,7 +147,7 @@ const Booking = sequelize.define(
     schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
-    }
+  }
 );
 
 User.hasMany(Booking, {

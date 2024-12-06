@@ -11,7 +11,7 @@ import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
-
+import { facilities } from "../data";
 function RoomDetails() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -37,7 +37,7 @@ function RoomDetails() {
       window.location.href = "/";
     }
   });
-  
+
   const [tomorrowDate, setTomorrowDate] = useState(getTomorrowDate);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(tomorrowDate);
@@ -53,16 +53,15 @@ function RoomDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const room = rooms.find((room) => {
-    return room.id === Number(id);
+    return room.room_id === Number(id);
   });
   const {
-    name,
-    description,
-    maxPerson,
-    maxAdults,
-    facilities,
-    imageLg,
-    price,
+    room_type,
+    max_persons,
+    max_adults,
+    selling_price,
+    retail_price,
+    room_id,
   } = room;
   const bookSchema = z.object({
     guestName: z
@@ -123,7 +122,7 @@ function RoomDetails() {
           no_of_adults: adults,
           no_of_kids: kids,
           payment_due: parseInt(price * 1.12),
-          room_id: id,
+          room_id: room_id,
           checked_status: "not_checked",
         };
         console.log(bookingData);
@@ -159,22 +158,31 @@ function RoomDetails() {
       });
     }
   };
- 
 
   return (
     <section>
       <div className="bg-room bg-cover bg-center h-[560px] relative flex justify-center items-center">
         <div className="absolute w-full h-full bg-black/70"></div>
         <h1 className="text-6xl text-white z-20 font-primary text-center">
-          {name} Details
+          {room_type} Details
         </h1>
       </div>
       <div className="container mx-auto">
         <div className="flex flex-col lg:flex-row h-full py-24">
           <div className="w-full h-full lg:w-[60%] px-6">
-            <h2 className="h2">{name}</h2>
-            <p className="mb-8">{description}</p>
-            <img className="mb-8" src={imageLg} alt="" />
+            <h2 className="h2">{room_type}</h2>
+            <p className="mb-8">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit.Ea placeat
+              eos sed voluptas unde veniam eligendi a. Quaerat molestiae hic
+              omnis temporibus quos consequuntur nam voluptatum ea accusamus,
+              corrupti nostrum eum placeat quibusdam quis beatae quae labore
+              earum architecto aliquid debitis.
+            </p>
+            <img
+              className="mb-8"
+              src={`http://localhost:8000/public/rooms/${room_id}-lg.png`}
+              alt="Large 1st Image"
+            />
             <div>
               <h3 className="h3 mb-3">Room Facilities</h3>
               <p className="mb-12">
@@ -223,10 +231,10 @@ function RoomDetails() {
                   />
                 </div>
                 <div className="h-[60px]">
-                  <AdultsDropdown maxAdults={maxAdults} />
+                  <AdultsDropdown maxAdults={max_adults} />
                 </div>
                 <div className="h-[60px]">
-                  <KidsDropdown maxPerson={maxPerson} />
+                  <KidsDropdown maxPerson={max_persons} />
                 </div>
                 <div>
                   <input

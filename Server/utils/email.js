@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import {
   sendBookCancelEmailHTMLFormat,
   sendBookCreateHTMLFormat,
+  sendResetEmailHTMLFormat,
   sendVerificationEmailHTMLFormat,
 } from "./emailHTMLformat.js";
 
@@ -38,6 +39,12 @@ export const sendBookingCancellationEmail = async (
   const subject = "Booking Cancelled";
   const html = sendBookCancelEmailHTMLFormat(booking_id, cancellation_reasons);
   return await sendEmail(guest_email, subject, html);
+};
+
+export const sendResetEmail = async (user_email, reset_token) => {
+  const subject = "Reset Password Link";
+  const html = sendResetEmailHTMLFormat(reset_token);
+  return await sendEmail(user_email, subject, html);
 };
 
 export const sendEmail = async (to, subject, html) => {

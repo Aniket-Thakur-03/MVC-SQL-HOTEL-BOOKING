@@ -5,8 +5,16 @@ import { Link } from "react-router-dom";
 import CustomAlert from "./Notification/CustomAlert";
 const Room = ({ room }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const [noofrooms, setNoofrooms] = useState(0);
-  const { id, name, image, maxAdults, maxPerson, description, price } = room;
+  const {
+    room_id,
+    room_type,
+    image_link,
+    no_of_rooms,
+    max_adults,
+    max_persons,
+    retail_price,
+    selling_price,
+  } = room;
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
@@ -15,31 +23,18 @@ const Room = ({ room }) => {
     setAlertType(type);
     setShowAlert(true);
   };
-  const getNoRooms = async (id) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:8000/api/rooms/noofrooms/${id}`
-      );
-      setNoofrooms(response.data.no_of_rooms);
-    } catch (error) {
-      triggerAlert(`${error.message || error.response?.data.message}`);
-      setNoofrooms(-1);
-    }
-  };
+
   useEffect(() => {
     if (!localStorage.getItem("token")) {
       setIsLoggedIn(false);
     }
   }, []);
-  // useEffect(() => {
-  //   getNoRooms(id);
-  // }, []);
   return (
     <div className="bg-white shadow-2xl min-h-[500px] group">
       <div className="overfolw-hidden">
         <img
           className="group-hover:scale-110 transition-all duration-300 w-full"
-          src={image}
+          src={`http://localhost:8000${image_link}`}
           alt=""
         />
       </div>
@@ -51,39 +46,42 @@ const Room = ({ room }) => {
             </div>
             <div className="flex gap-x-1">
               <div>Adults</div>
-              <div>{maxAdults}</div>
+              <div>{max_adults}</div>
             </div>
             <div className="text-accent">
               <Users className="text-[18px]" />
             </div>
             <div className="flex gap-x-1">
               <div>Total</div>
-              <div>{maxPerson}</div>
+              <div>{max_persons}</div>
             </div>
           </div>
         </div>
       </div>
       <div className="text-center">
-        <h3 className="h3">{name}</h3>
-        <h4 className="h4">Rooms Avaiable:{noofrooms}</h4>
+        <h3 className="h3">{room_type}</h3>
+        <h4 className="h4">Rooms Avaiable:{no_of_rooms}</h4>
         <p className="max-w-[300px] mx-auto mb-3 lg:mb-6">
-          {description.slice(0, 56)}
+          Lorem ipsum dolor sit amet consectetur adipisicing elit.
         </p>
       </div>
       <div>
-        {isLoggedIn ?  (
-            <Link
-              to={`/room/${id}`}
-              className="btn btn-secondary btn-sm max-w-[240px] mx-auto"
-            >
-              Book for ₹{price}
-            </Link>
-          ) : (
+        {isLoggedIn ? (
+          <Link
+            to={`/room/${room_id}`}
+            className="btn btn-secondary btn-sm max-w-[240px] mx-auto"
+          >
+            ₹{selling_price}
+            {"  "}
+            <span className="mx-2 line-through">₹{retail_price}</span>
+          </Link>
+        ) : (
           <p
             onClick={() => triggerAlert("Please Login to book!", "error")}
             className="cursor-not-allowed btn btn-secondary btn-sm max-w-[240px] mx-auto"
           >
-            Book for ₹{price}
+            ₹{selling_price}{" "}
+            <span className="mx-2 line-through">₹{retail_price}</span>
           </p>
         )}
       </div>

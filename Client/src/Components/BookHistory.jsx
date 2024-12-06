@@ -7,7 +7,7 @@ import CustomAlert from "./Notification/CustomAlert";
 
 function BookHistory() {
   const [data, setData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
+  const [filteredData, setFilteredData] = useState(data);
   const [filters, setFilters] = useState({
     bookingId: "",
     guestName: "",
@@ -47,9 +47,11 @@ function BookHistory() {
             },
           }
         );
-        setData(response.data.bookings);
-        setFilteredData(response.data.bookings);
-        setErrors({});
+        if (response.status == 200) {
+          setData(response.data.bookings);
+          setFilteredData(response.data.bookings);
+          setErrors({});
+        }
       } catch (error) {
         setErrors({
           api: error.response?.data.message,
@@ -104,22 +106,24 @@ function BookHistory() {
       );
 
       // Update the data and filteredData state
-      setData((prevData) =>
-        prevData.map((booking) =>
-          booking.booking_id === selectedBookingId
-            ? { ...booking, booking_status: "cancelled" }
-            : booking
-        )
-      );
-      setFilteredData((prevData) =>
-        prevData.map((booking) =>
-          booking.booking_id === selectedBookingId
-            ? { ...booking, booking_status: "cancelled" }
-            : booking
-        )
-      );
+      if (response.status == 200) {
+        setData((prevData) =>
+          prevData.map((booking) =>
+            booking.booking_id === selectedBookingId
+              ? { ...booking, booking_status: "cancelled" }
+              : booking
+          )
+        );
+        setFilteredData((prevData) =>
+          prevData.map((booking) =>
+            booking.booking_id === selectedBookingId
+              ? { ...booking, booking_status: "cancelled" }
+              : booking
+          )
+        );
 
-      toast.success(response.data.message);
+        toast.success(response.data.message);
+      }
     } catch (error) {
       toast.error(`Error: ${error.response?.data.message || error.message}`);
       closeModal();

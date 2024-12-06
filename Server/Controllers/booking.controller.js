@@ -8,12 +8,12 @@ import {
 
 export const createBooking = async (req, res) => {
   const { bookingData } = req.body;
-  const {user_id} = req.user;
+  const { user_id } = req.user;
   if (!bookingData) {
     return res.status(400).json({ message: "No data provided for booking" });
   }
-  if(bookingData.user_id !== user_id){
-    return res.status(400).json({message:"User id not same"});
+  if (bookingData.user_id !== user_id) {
+    return res.status(400).json({ message: "User id not same" });
   }
   try {
     const checkRoomAvailability = await Room.findOne({
@@ -45,6 +45,9 @@ export const createBooking = async (req, res) => {
       booking_status: bookingData.booking_status,
       payment_status: bookingData.payment_status,
       checked_status: bookingData.checked_status,
+      room_price: bookingData.selling_price,
+      meal_chosen: bookingData.meal_chosen,
+      meal_price: bookingData.meal_price,
       guest_name: bookingData.guest_name,
       guest_email: bookingData.guest_email,
       guest_phone_no: bookingData.guest_phone_no,
@@ -87,12 +90,12 @@ export const getBookingDetailsUserId = async (req, res) => {
       include: [
         {
           model: Room,
-          attributes: ["room_type", "price"],
+          attributes: ["room_type", "selling_price"],
         },
       ],
     });
     if (bookings.length === 0) {
-      return res.status(200).json({ message: "No Booking Done", bookings: [] });
+      return res.status(200).json({ message: "No Booking Done" });
     }
     return res.status(200).json({ bookings: bookings });
   } catch (error) {
@@ -106,7 +109,7 @@ export const getAllBookings = async (req, res) => {
       include: [
         {
           model: Room,
-          attributes: ["room_type", "price"],
+          attributes: ["room_type", "selling_price"],
         },
       ],
       order: [["created_at", "DESC"]],
@@ -128,7 +131,7 @@ export const getBookingDetailsBookingId = async (req, res) => {
       include: [
         {
           model: Room,
-          attributes: ["room_type", "price"],
+          attributes: ["room_type", "selling_price"],
         },
       ],
     });
@@ -155,15 +158,15 @@ export const getAllBookingsCheckIns = async (req, res) => {
       include: [
         {
           model: Room,
-          attributes: ["room_type", "price"],
+          attributes: ["room_type", "selling_price"],
         },
       ],
       order: [["created_at", "DESC"]],
     });
     if (bookings.length === 0) {
       return res
-        .status(200)
-        .json({ message: `No Bookings for ${req.query.date}`, bookings: [] });
+        .status(400)
+        .json({ message: `No Bookings for ${req.query.date}` });
     }
     return res.status(200).json({ bookings: bookings });
   } catch (error) {
@@ -189,7 +192,7 @@ export const getAllBookingsCheckOuts = async (req, res) => {
     });
     if (bookings.length === 0) {
       return res
-        .status(200)
+        .status(400)
         .json({ message: `No Bookings for ${req.query.date}` });
     }
     return res.status(200).json({ bookings: bookings });

@@ -28,11 +28,15 @@ function AllCheckouts() {
           },
         }
       );
-      setData(response.data.bookings);
-      setFilteredData(response.data.bookings);
+      console.log(response);
+      if (response.status == 200) {
+        setData(response.data.bookings);
+        setFilteredData(response.data.bookings);
+      }
     } catch (error) {
       console.error("Error fetching booking details:", error);
       setError(`${error.response?.data?.message || error.message}`);
+      triggerAlert(`${error.response?.data.message || error.message}`);
     }
   };
 
@@ -58,14 +62,19 @@ function AllCheckouts() {
           },
         }
       );
-      setFilteredData((prevData) =>
-        prevData.map((item) =>
-          item.booking_id === id
-            ? { ...item, checked_status: response.data.booking.checked_status }
-            : item
-        )
-      );
-      triggerAlert("Checkout completed successfully!", "success");
+      if (response.status == 200) {
+        setFilteredData((prevData) =>
+          prevData.map((item) =>
+            item.booking_id === id
+              ? {
+                  ...item,
+                  checked_status: response.data.booking.checked_status,
+                }
+              : item
+          )
+        );
+        triggerAlert("Checkout completed successfully!", "success");
+      }
     } catch (error) {
       triggerAlert(
         `${error.response?.data?.message || error.message}`,

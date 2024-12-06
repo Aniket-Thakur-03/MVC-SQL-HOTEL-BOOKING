@@ -13,28 +13,28 @@ const RoomProvider = ({ children }) => {
   const fetchRooms = async () => {
     try {
       const response = await axios.get("http://localhost:8000/api/rooms");
-      setRooms(response.data.rooms);
+      const sortedRooms = response.data.rooms.sort(
+        (a, b) => a.room_id - b.room_id
+      );
+      setRooms(sortedRooms);
     } catch (error) {
       console.error("Error fetching rooms:", error);
     }
   };
 
   useEffect(() => {
-    // Update total whenever adults or kids change
     setTotal(kids + adults);
-
     // Initial fetch of rooms
     fetchRooms();
-
-    // Polling every 30 seconds (adjust the interval as needed)
-    const intervalId = setInterval(fetchRooms, 10000);
-
+    console.log(rooms);
+    // Polling every 10 seconds
+    const intervalId = setInterval(fetchRooms, 30000);
     // Clean up the interval when the component unmounts
     return () => clearInterval(intervalId);
   }, [adults, kids]);
 
   const handleClick = () => {
-    const newRooms = rooms.filter((room) => room.maxAdults >= adults);
+    const newRooms = rooms.filter((room) => room.max_adults >= adults);
     setRooms(newRooms);
   };
 

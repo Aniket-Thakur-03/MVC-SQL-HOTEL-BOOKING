@@ -28,11 +28,14 @@ function AllCheckins() {
           },
         }
       );
-      setData(response.data.bookings);
-      setFilteredData(response.data.bookings);
+      if (response.status == 200) {
+        setData(response.data.bookings);
+        setFilteredData(response.data.bookings);
+      }
     } catch (error) {
       console.error("Error fetching booking details:", error);
       setError(`${error.response?.data.message || error.message}`);
+      triggerAlert(`${error.response?.data.message || error.message}`, "error");
     }
   };
   const handleFilter = () => {
@@ -57,14 +60,19 @@ function AllCheckins() {
           },
         }
       );
-      setFilteredData((prevData) =>
-        prevData.map((item) =>
-          item.booking_id === id
-            ? { ...item, booking_status: response.data.booking.booking_status }
-            : item
-        )
-      );
-      triggerAlert(`${response.data.message}`, "success");
+      if (response.status == 200) {
+        setFilteredData((prevData) =>
+          prevData.map((item) =>
+            item.booking_id === id
+              ? {
+                  ...item,
+                  booking_status: response.data.booking.booking_status,
+                }
+              : item
+          )
+        );
+        triggerAlert(`${response.data.message}`, "success");
+      }
     } catch (error) {
       triggerAlert(`${error.response?.data.message || error.message}`);
     }

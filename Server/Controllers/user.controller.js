@@ -3,7 +3,7 @@ dotenv.config();
 import { User } from "../Models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { sendVerificationEmail } from "../utils/email.js";
+import { sendResetEmail, sendVerificationEmail } from "../utils/email.js";
 
 export const createUser = async (req, res) => {
   try {
@@ -18,7 +18,7 @@ export const createUser = async (req, res) => {
       username,
       email,
       password,
-      role: "simple_user",
+      role: "admin",
     });
     await sendVerificationEmail(newUser.email, newUser.verification_token);
     return res
@@ -92,47 +92,123 @@ export const updateUserInfo = async (req, res) => {
       .status(400)
       .json({ message: "access unauthorized, id different" });
   }
-  const {newusername, newpassword} =req.body;
+  const { newusername, newpassword } = req.body;
   try {
     const user = await User.findByPk(user_id);
-    if(!user){
-      return res.status(400).json({message:"User not found"});
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
     }
 
-    if(newusername) user.username = newusername;
-    if(newpassword) user.password = newpassword;
-    const token = jwt.sign({
-      user_id:user_id,
-      username:newusername,
-      email:user.email,
-      role:user.role
-    },process.env.ACCESS_TOKEN_SECRET,{
-      expiresIn:process.env.ACCESS_TOKEN_EXPIRY
-    })
+    if (newusername) user.username = newusername;
+    if (newpassword) user.password = newpassword;
+    const token = jwt.sign(
+      {
+        user_id: user_id,
+        username: newusername,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+      }
+    );
     await user.save();
-    return res.status(200).json({message:"User updated successfully",token:token})
+    if (newusername) {
+      return res
+        .status(200)
+        .json({ message: "User updated successfully", token: token });
+    }
+    if (!newusername) {
+      return res.status(200).json({ message: "User updated successfully" });
+    }
   } catch (error) {
     console.error(error);
-    return res.status(500).json({message:`Something went wrong, ${error.message}`});
+    return res
+      .status(500)
+      .json({ message: `Something went wrong, ${error.message}` });
   }
 };
 
-export const verifyPassword = async (req,res) => {
-  const {user_id}=req.user;
-  const {password} = req.body;
+export const verifyPassword = async (req, res) => {
+  const { user_id } = req.user;
+  const { password } = req.body;
   try {
-    const checkUser = await User.findOne({where:{user_id:user_id}});
-    if(!checkUser){
-      return res.status(400).json({message:"User doesn't exist"});
+    const checkUser = await User.findOne({ where: { user_id: user_id } });
+    if (!checkUser) {
+      return res.status(400).json({ message: "User doesn't exist" });
     }
-    const passCheck = await bcrypt.compare(password,checkUser.password);
-    if(passCheck){
-      return res.status(200).json({message:"User password verified"});
-    }
-    else
-    return res.status(400).json({message:"Password Incorrect"});
+    const passCheck = await bcrypt.compare(password, checkUser.password);
+    if (passCheck) {
+      return res.status(200).json({ message: "User password verified" });
+    } else return res.status(400).json({ message: "Password Incorrect" });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({message:error.message});
+    return res.status(500).json({ message: error.message });
   }
-}
+};
+
+export const sendforgetPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ where: { email: email } });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "User doesn't exist, Please sign up" });
+    }
+    console.log(user.user_id, user.email);
+    const token = jwt.sign(
+      {
+        id: user.user_id,
+      },
+      process.env.ACCESS_TOKEN_SECRET,
+      {
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+      }
+    );
+    await sendResetEmail(email, token);
+    return res
+      .status(200)
+      .json({ message: "Reset Email password sent, check your inbox" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const resetPasswordToken = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const decoded = jwt.verify(id, process.env.ACCESS_TOKEN_SECRET);
+    console.log(decoded);
+    const user = await User.findByPk(decoded.id);
+    console.log(user);
+    if (!user) {
+      return res.status(400).json({ message: "User doesn't exist" });
+    }
+    await user.save();
+    console.log("verified");
+    return res.status(200).json({ message: "Token verified", id: decoded.id });
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ message: `Invalid or Expired Token` });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { password, id } = req.body;
+    const user = await User.findByPk(id);
+    if (!user) {
+      return res.status(400).json({ message: "User doesn't exist" });
+    }
+    user.password = password;
+    await user.save();
+    return res.status(200).json({ message: "Password Reset Successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ message: error.message });
+  }
+};
