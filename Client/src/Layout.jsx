@@ -11,7 +11,7 @@ function Layout() {
     location.pathname === "/unauthorized" ||
     location.pathname === "/checkemail" ||
     location.pathname === "/update/profile" ||
-    location.pathname === "/forget/password/:id" ||
+    location.pathname.startsWith("/forget/password") ||
     location.pathname === "/verifyemail";
   return (
     <RoomProvider>

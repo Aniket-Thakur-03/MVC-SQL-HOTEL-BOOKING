@@ -37,6 +37,7 @@ function BookHistory() {
 
     const fetchHistory = async () => {
       try {
+        setLoading(true);
         const token = localStorage.getItem("token");
         const userId = getUserId(token);
         const response = await axios.get(
@@ -47,15 +48,20 @@ function BookHistory() {
             },
           }
         );
-        if (response.status == 200) {
+        if (response.status == 200 && Array.isArray(response.data.bookings)) {
           setData(response.data.bookings);
           setFilteredData(response.data.bookings);
           setErrors({});
+        } else {
+          setData([]);
+          setFilteredData([]);
         }
       } catch (error) {
         setErrors({
           api: error.response?.data.message,
         });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -131,7 +137,7 @@ function BookHistory() {
       setLoading(false);
     }
   };
-
+  console.log(filteredData, data);
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-grow container mx-auto px-4 py-8">
@@ -162,7 +168,7 @@ function BookHistory() {
             className="border px-3 py-2 rounded w-full"
           />
         </div>
-        {filteredData.length > 0 ? (
+        {filteredData && filteredData.length > 0 ? (
           filteredData.map((item) => (
             <div
               key={item.booking_id}

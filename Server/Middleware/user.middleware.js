@@ -31,7 +31,7 @@ export const userCreateCheck = (req, res, next) => {
   if (typeof email !== "string" || !validateEmail(email)) {
     return res.status(400).json({ message: "Incorrect email format" });
   }
-  const pstring =  validatePassword(password);
+  const pstring = validatePassword(password);
   if (typeof password !== "string" || pstring !== "Password correct") {
     return res.status(400).json({ message: `${pstring}` });
   }
@@ -54,53 +54,61 @@ export const loginInfoCheck = (req, res, next) => {
 };
 
 export const userUpdateCheck = (req, res, next) => {
-  const { newusername, newpassword,flag,password } = req.body;
-  if(flag == 0){
-    return res.status(400).json({message:"Please enter either new username or new password or both"});
+  const { newusername, newpassword, flag, password } = req.body;
+
+  if (flag == 0) {
+    return res
+      .status(400)
+      .json({
+        message: "Please enter either new username or new password or both",
+      });
   }
-  else if(flag == 1){
-    newusername
-    ? newusername.length < 4
-      ? res
-          .status(400)
-          .json({ message: "Username should be atleast 4 characters" })
-      : null
-    : null;
-  newpassword
-    ? validatePassword(newpassword) !== "Password correct"
-      ? res.status(400).json({ message: `${validatePassword(newpassword)}` })
-      : password === newpassword ?res.status(400).json({message:"Password same as before"}):null
-    : null;
-  next();
+
+  if (flag == 1) {
+    if (newusername && newusername.length < 4) {
+      return res
+        .status(400)
+        .json({ message: "Username should be at least 4 characters" });
+    }
+    if (newpassword) {
+      const validationMessage = validatePassword(newpassword);
+      if (validationMessage !== "Password correct") {
+        return res.status(400).json({ message: validationMessage });
+      }
+      if (password === newpassword) {
+        return res.status(400).json({ message: "Password same as before" });
+      }
+    }
+    return next();
   }
-  else if(flag ==2){
-     newusername.length < 4
-      ? res
-          .status(400)
-          .json({ message: "Username should be atleast 4 characters" })
-      : null
-    const pstring = validatePassword(newpassword);
-    pstring !== "Password correct"
-      ? res.status(400).json({ message: `${pstring}` })
-      : password === newpassword ? res.status(400).json({message:"Password same as before"}):null
-  next();
+
+  if (flag == 2) {
+    if (newusername.length < 4) {
+      return res
+        .status(400)
+        .json({ message: "Username should be at least 4 characters" });
+    }
+    const validationMessage = validatePassword(newpassword);
+    if (validationMessage !== "Password correct") {
+      return res.status(400).json({ message: validationMessage });
+    }
+    if (password === newpassword) {
+      return res.status(400).json({ message: "Password same as before" });
+    }
+    return next();
   }
- else{
-  return res.status(400).json({message:"No update information"})
- }
+
+  return res.status(400).json({ message: "No update information" });
 };
 
-export const verifypassword = (req,res,next)=>{
-  const {password} = req.body;
-  if(!password){
-    return res.status(400).json({message:"Password not sent"});
-  }
-  else{
+export const verifypassword = (req, res, next) => {
+  const { password } = req.body;
+  if (!password) {
+    return res.status(400).json({ message: "Password not sent" });
+  } else {
     const pstring = validatePassword(password);
-    if(pstring !== "Password correct"){
-      return res.status(400).json({message:`${pstring}`});
-    }
-    else
-    next();
+    if (pstring !== "Password correct") {
+      return res.status(400).json({ message: `${pstring}` });
+    } else next();
   }
-}
+};

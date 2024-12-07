@@ -32,6 +32,7 @@ function Login() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetError, setResetError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -42,6 +43,7 @@ function Login() {
 
     if (validation.success) {
       try {
+        setLoading(true);
         const response = await axios.post(
           "http://localhost:8000/api/users/login",
           formData,
@@ -63,6 +65,8 @@ function Login() {
         setErrors({
           api: `${error.response?.data.message || error.message}`,
         });
+      } finally {
+        setLoading(false);
       }
     } else {
       const fieldErrors = validation.error.format();
@@ -76,6 +80,7 @@ function Login() {
   const handlePasswordReset = async (e) => {
     e.preventDefault();
     try {
+      setLoading(true);
       const response = await axios.post(
         "http://localhost:8000/api/users/send/reset/password",
         { email: resetEmail }
@@ -89,6 +94,8 @@ function Login() {
       setResetError(
         error.response?.data?.message || "Error sending reset email"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -198,6 +205,11 @@ function Login() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>
         </div>
       )}
 

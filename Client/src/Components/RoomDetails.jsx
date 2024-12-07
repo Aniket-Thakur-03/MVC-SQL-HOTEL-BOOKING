@@ -52,9 +52,7 @@ function RoomDetails() {
   const { rooms, adults, kids } = useContext(RoomContext);
   const navigate = useNavigate();
   const { id } = useParams();
-  const room = rooms.find((room) => {
-    return room.room_id === Number(id);
-  });
+  const room = rooms.find((room) => room.room_id === Number(id));
   const {
     room_type,
     max_persons,
@@ -63,6 +61,7 @@ function RoomDetails() {
     retail_price,
     room_id,
   } = room;
+
   const bookSchema = z.object({
     guestName: z
       .string()
@@ -100,53 +99,30 @@ function RoomDetails() {
       window.location.href = "/";
     }
   }, [error]);
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const formData = { guestName, email, phoneNo, aadharCardNo, address };
     const validation = bookSchema.safeParse(formData);
     if (validation.success) {
-      try {
-        setLoading(true);
-        const bookingData = {
-          user_id: getUserUserid(localStorage.getItem("token")),
-          guest_name: guestName,
-          guest_email: email,
-          guest_phone_no: phoneNo,
-          address: address,
-          check_in_date: startDate,
-          check_out_date: endDate,
-          booking_status: "pending",
-          payment_status: "unpaid",
-          special_requests: request,
-          guest_aadhar_card: aadharCardNo,
-          no_of_adults: adults,
-          no_of_kids: kids,
-          payment_due: parseInt(price * 1.12),
-          room_id: room_id,
-          checked_status: "not_checked",
-        };
-        console.log(bookingData);
-        const response = await axios.post(
-          "http://localhost:8000/api/booking/createbooking",
-          { bookingData },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        setError(null);
-        toast.success(`${response.data.message}`);
-        setTimeout(() => navigate("/"), 2000);
-      } catch (error) {
-        triggerAlert(
-          `${error.response?.data.message || error.message}`,
-          "error"
-        );
-        setError(`${error.response?.data.message || error.message}`);
-      } finally {
-        setLoading(false);
-      }
+      const bookingData = {
+        user_id: getUserUserid(localStorage.getItem("token")),
+        guest_name: guestName,
+        guest_email: email,
+        guest_phone_no: phoneNo,
+        address: address,
+        check_in_date: startDate,
+        check_out_date: endDate,
+        booking_status: "pending",
+        payment_status: "unpaid",
+        special_requests: request,
+        guest_aadhar_card: aadharCardNo,
+        no_of_adults: adults,
+        no_of_kids: kids,
+        payment_due: parseInt(selling_price * 1.12), // Placeholder, will update in review page
+        room_id: room_id,
+        checked_status: "not_checked",
+      };
+      navigate("/review-booking", { state: { bookingData, room } });
     } else {
       const fieldErrors = validation.error.format();
       setError({
@@ -319,7 +295,7 @@ function RoomDetails() {
                   className="h-[60px] btn btn-lg btn-primary w-full"
                   onClick={(e) => handleSubmit(e)}
                 >
-                  Book now for ₹{(price * 1.12).toFixed(2)}
+                  Book now for ₹{(selling_price * 1.12).toFixed(2)}
                 </button>
                 <sub className="text-center">*Price calculated with GST</sub>
               </div>

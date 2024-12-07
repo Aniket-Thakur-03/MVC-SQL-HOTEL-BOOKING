@@ -104,7 +104,7 @@ export const updateUserInfo = async (req, res) => {
     const token = jwt.sign(
       {
         user_id: user_id,
-        username: newusername,
+        username: newusername || user.username,
         email: user.email,
         role: user.role,
       },
@@ -114,14 +114,9 @@ export const updateUserInfo = async (req, res) => {
       }
     );
     await user.save();
-    if (newusername) {
-      return res
-        .status(200)
-        .json({ message: "User updated successfully", token: token });
-    }
-    if (!newusername) {
-      return res.status(200).json({ message: "User updated successfully" });
-    }
+    return res
+      .status(200)
+      .json({ message: "User updated successfully", token: token });
   } catch (error) {
     console.error(error);
     return res

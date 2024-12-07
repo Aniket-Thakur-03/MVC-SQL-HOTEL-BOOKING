@@ -23,6 +23,7 @@ import VerifyEmail from "./Components/VerifyEmail.jsx";
 import CheckEmail from "./Components/CheckEmail.jsx";
 import UpdateProfile from "./Components/UpdateProfile.jsx";
 import ResetPassword from "./Components/ResetPassword.jsx";
+import ReviewBoooking from "./Components/ReviewBoooking.jsx";
 function getUserRole(token) {
   const decoded = jwtDecode(token);
   return decoded.role;
@@ -101,6 +102,10 @@ const router = createBrowserRouter([
       {
         path: "forget/password/:id",
         element: <ResetPassword />,
+      },
+      {
+        path: "review-booking",
+        element: <ReviewBoooking />,
       },
     ],
   },

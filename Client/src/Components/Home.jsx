@@ -3,6 +3,7 @@ import BookForm from "./BookForm";
 import HeroSlider from "./HeroSlider";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 const Modal = ({ message, onClose }) => {
   return (
     <div
@@ -24,17 +25,25 @@ const Modal = ({ message, onClose }) => {
     </div>
   );
 };
+
 export default function Home() {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-  useEffect(()=>{
-    if(localStorage.getItem("token") && window.location.pathname=== '/'){
-      setShowModal(true); 
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const hasSeenModal = localStorage.getItem("hasSeenModal");
+
+    if (token && !hasSeenModal) {
+      setShowModal(true);
+      localStorage.setItem("hasSeenModal", "true"); // Set flag to prevent future modal displays
     }
-  },[navigate]);
+  }, [navigate]);
+
   const handleCloseModal = () => {
     setShowModal(false);
   };
+
   return (
     <>
       {showModal && (
