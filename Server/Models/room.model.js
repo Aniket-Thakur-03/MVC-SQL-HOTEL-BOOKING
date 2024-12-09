@@ -77,6 +77,18 @@ export const Room = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    state:{
+      type:DataTypes.BOOLEAN,
+      allowNull:false
+    },
+    created_by:{
+      type:DataTypes.STRING,
+      allowNull:false
+    },
+    updated_by:{
+      type:DataTypes.STRING,
+      allowNull:false
+    }
   },
   {
     timestamps: true,

@@ -13,7 +13,7 @@ export default function AdminDashboard() {
     { name: "Check-ins", value: "check-ins" },
     { name: "Check-outs", value: "check-outs" },
     { name: "Update Payment Status", value: "update-payment-status" },
-    { name: "Update Room", value: "update-room" },
+    { name: "Rooms", value: "update-rooms" },
   ];
 
   return (
@@ -48,8 +48,8 @@ export default function AdminDashboard() {
             ? "Check-outs"
             : activeOption === "update-payment-status"
             ? "Update Payment Status"
-            : activeOption === "update-room"
-            ? "Update Room"
+            : activeOption === "update-rooms"
+            ? "Rooms"
             : "All Bookings"}
         </h1>
         <div className="bg-white p-6 rounded shadow-lg">
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
               <UpdatePayment />
             </>
           )}
-          {activeOption === "update-room" && (
+          {activeOption === "update-rooms" && (
             <>
               <p>Update the rooms here.</p>
               <UpdateRoom />

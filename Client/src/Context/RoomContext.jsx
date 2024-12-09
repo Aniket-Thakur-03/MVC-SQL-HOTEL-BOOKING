@@ -29,7 +29,7 @@ const RoomProvider = ({ children }) => {
     fetchRooms();
     console.log(rooms);
     // Polling every 10 seconds
-    const intervalId = setInterval(fetchRooms, 30000);
+    const intervalId = setInterval(fetchRooms, 5000);
     // Clean up the interval when the component unmounts
     return () => clearInterval(intervalId);
   }, [adults, kids]);
