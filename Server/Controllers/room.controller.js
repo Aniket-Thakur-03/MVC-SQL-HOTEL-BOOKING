@@ -50,3 +50,17 @@ export const avaialableRooms = async (req, res) => {
     return res.status(500).json({ message: `Error: ${error.message}` });
   }
 };
+
+export const updateRoom = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { updatedPrice } = req.body;
+    const room = await Room.findByPk(id);
+    room.selling_price = updatedPrice;
+    await room.save();
+    return res.status(200).json({ message: "Updated Successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};

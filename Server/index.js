@@ -3,7 +3,7 @@ dotenv.config();
 
 import sequelize from "./dbconnection.js";
 import app from "./app.js";
-import "./cronJobs.js";
+// import "./cronJobs.js";
 
 await sequelize
   .authenticate()

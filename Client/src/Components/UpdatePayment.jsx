@@ -41,8 +41,10 @@ function UpdatePayment() {
           },
         }
       );
-      setData(response.data.booking);
-      setError(null);
+      if (response.status == 200) {
+        setData(response.data.booking);
+        setError(null);
+      }
     } catch (error) {
       setData(null);
       setError(`${error.response?.data?.message || error.message}`);
@@ -117,10 +119,19 @@ function UpdatePayment() {
             <strong>Room Type:</strong> {data.Room.room_type}
           </p>
           <p className="text-sm text-gray-600 mb-1">
-            <strong>Price:</strong> ₹{data.Room.price}
+            <strong>Room Price:</strong> ₹{data.room_price}
           </p>
+          {data.meal_chosen && (
+            <p className="text-sm text-gray-600 mb-1">
+              <strong>Meals Price:</strong> ₹{data.meal_price}
+            </p>
+          )}
+
           <p className="text-sm text-gray-600 mb-1">
             <strong>Payment Due:</strong> ₹{data.payment_due}
+          </p>
+          <p className="text-sm text-gray-600 mb-1">
+            <strong>Amount paid:</strong> ₹{data.amount_paid}
           </p>
           <p
             className={`text-sm font-semibold ${

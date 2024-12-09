@@ -71,17 +71,30 @@ const Room = ({ room }) => {
             to={`/room/${room_id}`}
             className="btn btn-secondary btn-sm max-w-[240px] mx-auto"
           >
-            ₹{selling_price}
-            {"  "}
-            <span className="mx-2 line-through">₹{retail_price}</span>
+            {selling_price !== retail_price ? (
+              <div>
+                ₹{selling_price}
+                {"  "}
+                <span className="mx-2 line-through">₹{retail_price}</span>
+              </div>
+            ) : (
+              <div>₹{selling_price}</div>
+            )}
           </Link>
         ) : (
           <p
             onClick={() => triggerAlert("Please Login to book!", "error")}
             className="cursor-not-allowed btn btn-secondary btn-sm max-w-[240px] mx-auto"
           >
-            ₹{selling_price}{" "}
-            <span className="mx-2 line-through">₹{retail_price}</span>
+            {selling_price !== retail_price ? (
+              <div>
+                ₹{selling_price}
+                {"  "}
+                <span className="mx-2 line-through">₹{retail_price}</span>
+              </div>
+            ) : (
+              <div>₹{selling_price}</div>
+            )}
           </p>
         )}
       </div>

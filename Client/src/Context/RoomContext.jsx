@@ -16,7 +16,8 @@ const RoomProvider = ({ children }) => {
       const sortedRooms = response.data.rooms.sort(
         (a, b) => a.room_id - b.room_id
       );
-      setRooms(sortedRooms);
+      const sRooms = sortedRooms.filter((room) => room.no_of_rooms !== 0);
+      setRooms(sRooms);
     } catch (error) {
       console.error("Error fetching rooms:", error);
     }

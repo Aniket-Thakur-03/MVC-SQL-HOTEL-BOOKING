@@ -34,8 +34,12 @@ const updateSellingPrice = async () => {
     const rooms = await Room.findAll();
     rooms.forEach(async (room) => {
       if (room.retail_price) {
-        const updatedSellingPrice = room.retail_price * priceMultiplier;
-        await room.update({ selling_price: updatedSellingPrice });
+        const updatedSellingPrice = room.retail_price;
+        const mealprice = 100;
+        await room.update({
+          selling_price: updatedSellingPrice,
+          meals_price: mealprice,
+        });
         console.log(
           `Updated selling price ${updatedSellingPrice} for room ID ${room.room_id}`
         );
@@ -49,7 +53,7 @@ const updateSellingPrice = async () => {
   }
 };
 
-cron.schedule("0 0 * * *", updateSellingPrice, {
+cron.schedule("*/10 * * * * *", updateSellingPrice, {
   scheduled: true,
   timezone: "Asia/Kolkata",
 });

@@ -45,7 +45,7 @@ export const createBooking = async (req, res) => {
       booking_status: bookingData.booking_status,
       payment_status: bookingData.payment_status,
       checked_status: bookingData.checked_status,
-      room_price: bookingData.selling_price,
+      room_price: bookingData.room_price,
       meal_chosen: bookingData.meal_chosen,
       meal_price: bookingData.meal_price,
       guest_name: bookingData.guest_name,

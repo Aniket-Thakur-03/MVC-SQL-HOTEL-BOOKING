@@ -159,8 +159,17 @@ function AllCheckins() {
               <strong>Room Type:</strong> {item.Room.room_type}
             </p>
             <p className="text-sm text-gray-600 mb-1">
-              <strong>Price:</strong> ₹{item.Room.price}
+              <strong>Payment Due:</strong> ₹{item.payment_due}
             </p>
+            <p className="text-sm text-gray-600 mb-1">
+              <strong>Room Price:</strong> ₹{item.room_price}
+            </p>
+            {item.meal_chosen && (
+              <p className="text-sm text-gray-600 mb-1">
+                <strong>Meals Price:</strong> ₹{item.meal_price}
+              </p>
+            )}
+
             <p className="text-sm text-gray-600 mb-1">
               <strong>Payment status:</strong> {item.payment_status}
             </p>

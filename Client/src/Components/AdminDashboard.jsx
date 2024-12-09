@@ -3,6 +3,7 @@ import AllCheckins from "./AllCheckins";
 import AllCheckouts from "./AllCheckouts";
 import UpdatePayment from "./UpdatePayment";
 import AllBookings from "./AllBookings";
+import UpdateRoom from "./UpdateRoom";
 
 export default function AdminDashboard() {
   const [activeOption, setActiveOption] = useState("check-ins");
@@ -12,6 +13,7 @@ export default function AdminDashboard() {
     { name: "Check-ins", value: "check-ins" },
     { name: "Check-outs", value: "check-outs" },
     { name: "Update Payment Status", value: "update-payment-status" },
+    { name: "Update Room", value: "update-room" },
   ];
 
   return (
@@ -46,6 +48,8 @@ export default function AdminDashboard() {
             ? "Check-outs"
             : activeOption === "update-payment-status"
             ? "Update Payment Status"
+            : activeOption === "update-room"
+            ? "Update Room"
             : "All Bookings"}
         </h1>
         <div className="bg-white p-6 rounded shadow-lg">
@@ -81,6 +85,12 @@ export default function AdminDashboard() {
                 details are accurate.
               </p>
               <UpdatePayment />
+            </>
+          )}
+          {activeOption === "update-room" && (
+            <>
+              <p>Update the rooms here.</p>
+              <UpdateRoom />
             </>
           )}
         </div>

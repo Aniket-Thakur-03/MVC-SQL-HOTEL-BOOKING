@@ -6,7 +6,6 @@ import CheckOut from "./CheckOut";
 import AdultsDropdown from "./AdultsDropdown";
 import KidsDropdown from "./KidsDropdown";
 import { RoomContext } from "../Context/RoomContext";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -53,14 +52,7 @@ function RoomDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
   const room = rooms.find((room) => room.room_id === Number(id));
-  const {
-    room_type,
-    max_persons,
-    max_adults,
-    selling_price,
-    retail_price,
-    room_id,
-  } = room;
+  const { room_type, max_persons, max_adults, selling_price, room_id } = room;
 
   const bookSchema = z.object({
     guestName: z
@@ -110,6 +102,7 @@ function RoomDetails() {
         guest_email: email,
         guest_phone_no: phoneNo,
         address: address,
+        room_price: selling_price,
         check_in_date: startDate,
         check_out_date: endDate,
         booking_status: "pending",
@@ -118,7 +111,6 @@ function RoomDetails() {
         guest_aadhar_card: aadharCardNo,
         no_of_adults: adults,
         no_of_kids: kids,
-        payment_due: parseInt(selling_price * 1.12), // Placeholder, will update in review page
         room_id: room_id,
         checked_status: "not_checked",
       };

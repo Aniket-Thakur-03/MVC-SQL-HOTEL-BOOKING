@@ -155,8 +155,14 @@ function AllBookings() {
                 {new Date(item.check_out_date).toLocaleDateString()}
               </p>
               <p className="text-sm text-gray-600">
-                Room Type: {item.Room.room_type} |Room Price: ₹{item.Room.price}
+                Room Type: {item.Room.room_type} |Room Price: ₹{item.room_price}
               </p>
+              {item.meal_chosen && (
+                <p className="text-sm text-gray-600">
+                  Meals Price: ₹{item.meal_price}
+                </p>
+              )}
+
               <p className="text-sm text-gray-600">
                 Booking Status: {item.booking_status}
               </p>
