@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import CustomAlert from "./Notification/CustomAlert";
 function ReviewBooking() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { bookingData, room } = location.state;
   const { room_type, selling_price, meals_price, max_persons } = room;
@@ -19,12 +19,19 @@ function ReviewBooking() {
   const [totalPayment, setTotalPayment] = useState(selling_price);
   const [tax, setTax] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
 
   const handleMealChange = (meal, isChecked) => {
     const updatedMeals = { ...selectedMeals, [meal]: isChecked };
     setSelectedMeals(updatedMeals);
   };
-
+  const triggerAlert = (message, type) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setShowAlert(true);
+  };
   useEffect(() => {
     const totalSelectedMealsPrice =
       (selectedMeals.breakfast + selectedMeals.lunch + selectedMeals.dinner) *
@@ -39,6 +46,11 @@ function ReviewBooking() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
+      if (mealsChosen && mealsPrice == 0) {
+        throw new Error(
+          "You have chosen meals.please select atleast 1 option from Breakfast, Lunch and Dinner"
+        );
+      }
       const response = await axios.post(
         "http://localhost:8000/api/booking/createbooking",
         {
@@ -56,10 +68,12 @@ function ReviewBooking() {
           },
         }
       );
-
-      navigate("/", { state: response.data });
+      if (response.status == 201) {
+        toast.success(`${response.data.message}`);
+      }
     } catch (error) {
       console.error("Booking failed", error);
+      triggerAlert(`${error.response?.data.message || error.message}`, "error");
     } finally {
       setLoading(false);
     }
@@ -212,6 +226,13 @@ function ReviewBooking() {
         pauseOnHover
         theme="colored"
       />
+      {showAlert && (
+        <CustomAlert
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setShowAlert(false)}
+        />
+      )}
     </div>
   );
 }

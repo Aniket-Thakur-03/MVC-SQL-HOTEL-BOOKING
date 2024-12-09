@@ -8,7 +8,8 @@ export const createRoom = async (req, res) => {
       room_type: roomData.room_type,
       max_adults: Number(roomData.max_adults),
       max_persons: Number(roomData.max_persons),
-      meals_price: Number(roomData.meals_price),
+      veg_meals_price: Number(roomData.veg_meals_price),
+      non_veg_meals_price: Number(roomData.non_veg_meals_price),
       retail_price: Number(roomData.retail_price),
       selling_price: Number(roomData.selling_price),
       no_of_rooms: Number(roomData.no_of_rooms),
@@ -22,6 +23,20 @@ export const createRoom = async (req, res) => {
   }
 };
 export const roomfind = async (req, res) => {
+  try {
+    const rooms = await Room.findAll();
+    if (rooms.length === 0) {
+      return res.status(400).json({ message: "Rooms doesn't exist" });
+    }
+    const sortedRooms = rooms.filter((room) => room.state === "active");
+    return res.status(200).json({ message: "All rooms", rooms: sortedRooms });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const roomfindAdmin = async (req, res) => {
   try {
     const rooms = await Room.findAll();
     if (rooms.length === 0) {

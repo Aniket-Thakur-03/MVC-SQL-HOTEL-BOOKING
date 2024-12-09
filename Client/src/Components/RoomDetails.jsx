@@ -33,7 +33,7 @@ function RoomDetails() {
   useEffect(() => {
     if (!localStorage.getItem("token")) {
       triggerAlert("User logged off, Please sign in again", "error");
-      window.location.href = "/";
+      setTimeout(() => (window.location.href = "/"), 3000);
     }
   });
 
@@ -287,9 +287,8 @@ function RoomDetails() {
                   className="h-[60px] btn btn-lg btn-primary w-full"
                   onClick={(e) => handleSubmit(e)}
                 >
-                  Book now for ₹{(selling_price * 1.12).toFixed(2)}
+                  Review Booking
                 </button>
-                <sub className="text-center">*Price calculated with GST</sub>
               </div>
             </div>
           </form>

@@ -11,6 +11,7 @@ const roomRouter = Router();
 
 roomRouter.get("/noofrooms/:id", avaialableRooms);
 roomRouter.get("/", roomfind);
+roomRouter.get("/get", adminOnly, roomfind);
 roomRouter.post("/create/room", createRoom);
 roomRouter.patch("/update/room/:id", adminOnly, updateRoom);
 

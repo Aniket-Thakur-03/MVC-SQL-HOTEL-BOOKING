@@ -23,14 +23,30 @@ export const Room = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    meals_price: {
+    meals_available: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+    veg_meals_price: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 100,
+      validate: {
+        min: {
+          args: [[0]],
+          msg: "Meals price can't be negative",
+        },
+      },
+    },
+    non_veg_meals_price: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 200,
       validate: {
         min: {
-          args: [[100]],
-          msg: "Meals price must be atleast ₹100",
+          args: [[0]],
+          msg: "Meals price can't be negative",
         },
       },
     },
@@ -77,18 +93,25 @@ export const Room = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    state:{
-      type:DataTypes.BOOLEAN,
-      allowNull:false
+    state: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "inactive",
+      validate: {
+        isIn: {
+          args: [["active", "inactive"]],
+          msg: "state can only be active or inactive",
+        },
+      },
     },
-    created_by:{
-      type:DataTypes.STRING,
-      allowNull:false
+    created_by: {
+      type: DataTypes.STRING,
+      allowNull: false,
     },
-    updated_by:{
-      type:DataTypes.STRING,
-      allowNull:false
-    }
+    updated_by: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   },
   {
     timestamps: true,
