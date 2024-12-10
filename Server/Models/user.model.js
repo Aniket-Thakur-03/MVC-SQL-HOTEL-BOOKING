@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import sequelize from "../dbconnection.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
+import { Booking } from "./bookings.model.js";
 
 const User = sequelize.define(
   "User",
@@ -15,6 +16,10 @@ const User = sequelize.define(
     username: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    full_name:{
+      type:DataTypes.STRING,
+      allowNull:true
     },
     email: {
       type: DataTypes.STRING,
@@ -87,5 +92,7 @@ const User = sequelize.define(
     },
   }
 );
+
+User.hasMany(Booking,{foreignKey:"user_id"})
 
 export { User };

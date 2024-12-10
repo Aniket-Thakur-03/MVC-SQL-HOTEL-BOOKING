@@ -33,6 +33,28 @@ const Booking = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
+    meal_type:{
+      type:DataTypes.STRING,
+      allowNull:true,
+      validate:{
+        isIn:{
+          args:[['veg','non-veg']],
+          msg:"Meal type can be veg or non-veg"
+        }
+      }
+    },
+    breakfast:{
+      type:DataTypes.BOOLEAN,
+      allowNull:true
+    },
+    lunch:{
+      type:DataTypes.BOOLEAN,
+      allowNull:true
+    },
+    dinner:{
+      type:DataTypes.BOOLEAN,
+      allowNull:true
+    },
     meal_price: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -85,6 +107,10 @@ const Booking = sequelize.define(
         },
       },
     },
+    no_of_days:{
+      type:DataTypes.INTEGER,
+      allowNull:false
+    },
     guest_name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -117,11 +143,35 @@ const Booking = sequelize.define(
       type: DataTypes.CHAR(12),
       allowNull: false,
     },
+    country_id:{
+      type:DataTypes.INTEGER,
+      allowNull:false,
+      references:{
+        model:"countries",
+        key:"country_id"
+      }
+    },
+    state_id:{
+      type:DataTypes.INTEGER,
+      allowNull:false,
+      references:{
+        model:"states",
+        key:"state_id"
+      }
+    },
+    city_id:{
+      type:DataTypes.INTEGER,
+      allowNull:false,
+      references:{
+        model:"cities",
+        key:"city_id"
+      }
+    },
     address: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    specia_requests: {
+    special_requests: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
@@ -150,17 +200,13 @@ const Booking = sequelize.define(
   }
 );
 
-User.hasMany(Booking, {
-  foreignKey: "user_id",
-  onDelete: "CASCADE",
-});
 
-Booking.belongsTo(User, { foreignKey: "user_id", onDelete: "CASCADE" });
+
+Booking.belongsTo(User, { foreignKey: "user_id"});
 
 Room.hasMany(Booking, {
-  foreignKey: "room_id",
-  onDelete: "CASCADE",
+  foreignKey: "room_id"
 });
-Booking.belongsTo(Room, { foreignKey: "room_id", onDelete: "CASCADE" });
+Booking.belongsTo(Room, { foreignKey: "room_id"});
 
 export { Booking };

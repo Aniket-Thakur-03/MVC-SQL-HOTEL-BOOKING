@@ -3,6 +3,9 @@ import cors from "cors";
 import { userRouter } from "./Routes/user.route.js";
 import { roomRouter } from "./Routes/room.route.js";
 import { bookingRouter } from "./Routes/booking.route.js";
+import {countryRouter} from "./Routes/country.route.js";
+import {stateRouter} from "./Routes/state.route.js";
+import {cityRouter} from "./Routes/city.route.js";
 // import path from 'path';
 // import { fileURLToPath } from 'url';
 // const __filename =fileURLToPath(import.meta.url);
@@ -25,6 +28,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/users", userRouter);
 app.use("/api/rooms", roomRouter);
 app.use("/api/booking", bookingRouter);
+app.use("/api/country", countryRouter);
+app.use("/api/state", stateRouter);
+app.use("/api/city", cityRouter);
 // app.get("/uploads", (req,res)=>{
 //     const filePath= path.join(__dirname,"uploads","room.jpg");
 //     res.sendFile(filePath,(err)=>{

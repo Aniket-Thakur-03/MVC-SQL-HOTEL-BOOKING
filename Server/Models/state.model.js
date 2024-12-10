@@ -1,5 +1,7 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../dbconnection.js";
+import { Country } from "./country.model.js";
+import { City } from "./city.model.js";
 
 export const State = sequelize.define("State",{
     state_id:{
@@ -18,6 +20,10 @@ export const State = sequelize.define("State",{
     },
     state_code:{
         type:DataTypes.STRING(2),
+        allowNull:false
+    },
+    state_name:{
+        type:DataTypes.STRING,
         allowNull:false
     },
     isActive:{
@@ -40,3 +46,6 @@ export const State = sequelize.define("State",{
     createdAt:"created_at",
     updatedAt:"updated_at"
 })
+
+State.belongsTo(Country,{foreignKey:"country_id"})
+State.hasMany(City,{foreignKey:"state_id", onDelete:"CASCADE"})

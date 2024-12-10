@@ -1,11 +1,30 @@
+import sequelize from "../dbconnection.js";
 import { Room } from "../Models/room.model.js";
+import { Roomtype } from "../Models/roomtype.model.js";
 
 export const createRoom = async (req, res) => {
+  if(!req.files || !req.files['roomimage'] || !req.files['roomimagelg']){
+    return res.status(400).json({message:'Both images must be uploaded.'});
+  }
+  const filePaths = [
+    `/uploads/${req.files['roomimage'][0].filename}`,
+    `/uploads/${req.files['roomimagelg'][0].filename}`,
+  ];
   const { roomData } = req.body;
+  const {username} =req.user;
+
+
   console.log(roomData);
+  const transaction =await sequelize.transaction();
   try {
+    const newroomtype = await Roomtype.create({
+      room_name:roomData.room_name,
+      created_by:username,
+      updated_by:username
+    },{transaction:transaction});
+
     const newRoom = await Room.create({
-      room_type: roomData.room_type,
+      roomtype_id:Number(newroomtype.roomtype_id),
       max_adults: Number(roomData.max_adults),
       max_persons: Number(roomData.max_persons),
       veg_meals_price: Number(roomData.veg_meals_price),
@@ -13,11 +32,15 @@ export const createRoom = async (req, res) => {
       retail_price: Number(roomData.retail_price),
       selling_price: Number(roomData.selling_price),
       no_of_rooms: Number(roomData.no_of_rooms),
-      image_link: roomData.image_link,
-      big_image_link: roomData.big_image_link,
-    });
+      image_link: filePaths[0],
+      big_image_link: filePaths[1],
+      created_by:username,
+      updated_by:username
+    },{transaction:transaction});
+    await transaction.commit();
     return res.json({ room: newRoom });
   } catch (error) {
+    await transaction.rollback();
     console.error(error);
     return res.json({ message: error.message });
   }

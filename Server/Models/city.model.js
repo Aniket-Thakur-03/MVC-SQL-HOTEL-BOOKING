@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../dbconnection.js";
+import { State } from "./state.model.js";
 
 export const City = sequelize.define("City",{
     city_id:{
@@ -41,3 +42,5 @@ export const City = sequelize.define("City",{
     createdAt:"created_at",
     updatedAt:"updated_at"
 })
+
+City.belongsTo(State,{foreignKey:'state_id'})

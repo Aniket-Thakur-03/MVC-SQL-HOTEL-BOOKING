@@ -1,7 +1,8 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../dbconnection.js";
+import { Roomtype } from "./roomtype.model.js";
 
-export const Room = sequelize.define(
+const Room = sequelize.define(
   "Room",
   {
     room_id: {
@@ -10,9 +11,13 @@ export const Room = sequelize.define(
       autoIncrement: true,
       allowNull: false,
     },
-    room_type: {
-      type: DataTypes.STRING,
+    roomtype_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+      references:{
+        model:"roomtypes",
+        key:"roomtype_id"
+      }
     },
 
     max_adults: {
@@ -128,3 +133,7 @@ export const Room = sequelize.define(
     },
   }
 );
+
+Room.hasOne(Roomtype,{foreignKey:"roomtype_id"})
+
+export {Room};
