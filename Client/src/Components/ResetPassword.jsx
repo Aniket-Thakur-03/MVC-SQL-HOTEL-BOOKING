@@ -1,16 +1,43 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
+import { z } from "zod";
+import CustomAlert from "./Notification/CustomAlert";
+const resetSchema = z.object({
+    password: z
+    .string()
+    .min(8, "Password must have at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(
+      /[@$!%*?&#]/,
+      "Password must contain at least one special character (@$!%*?&#)"
+    ),
+    repassword: z
+    .string()
+    .min(8, "Password must have at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(
+      /[@$!%*?&#]/,
+      "Password must contain at least one special character (@$!%*?&#)"
+    ),
+})
 function ResetPassword() {
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
   const [password, setPassword] = useState("");
+  const [repassword, setRepassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [uid, setUId] = useState(0);
-  const navigate = useNavigate();
   const { id } = useParams();
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
+  const [alertCallback, setAlertCallback] = useState(null); 
 
   const verifyUser = async (id) => {
     try {
@@ -27,7 +54,12 @@ function ResetPassword() {
       setMessage(error.response?.data.message || error.message);
     }
   };
-
+  const triggerAlert = (message, type, callback = null) => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertCallback(() => callback);
+    setShowAlert(true);
+  };
   useEffect(() => {
     if (!id) {
       setStatus("error");
@@ -65,29 +97,59 @@ function ResetPassword() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border rounded-md p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+          {typeof error ==="object" && error.password &&  <div className="text-red-500 text-sm mb-4">{error.password}</div>}
+          <label
+            htmlFor="re_password"
+            className="block text-gray-700 font-medium mb-2"
+          >
+            Re-type your new password
+          </label>
+          <input
+            type="password"
+            name="re_password"
+            id="re_password"
+            placeholder="Re-type New Password"
+            value={repassword}
+            onChange={(e) => setRepassword(e.target.value)}
+            className="w-full border rounded-md p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {typeof error ==="object" && error.repassword &&  <div className="text-red-500 text-sm mb-4">{error.repassword}</div>}
+          {(typeof error === "string"
+          ) && <div className="text-red-500 text-sm mb-4">{error}</div>}
           <button
             className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
             onClick={async (e) => {
               e.preventDefault();
-              try {
-                setLoading(true);
-                const response = await axios.post(
-                  "http://localhost:8000/api/users/forget/password",
-                  {
-                    password: password,
-                    id: uid,
+              if(password === repassword){
+                const formData = { password, repassword};
+                const validation = resetSchema.safeParse(formData);
+                if(validation.success){
+                  try {
+                    setLoading(true);
+                    const response = await axios.post(
+                      "http://localhost:8000/api/users/forget/password",
+                      {
+                        password: password,
+                        id: uid,
+                      }
+                    );
+                    if (response.status == 200) {
+                      triggerAlert("Password Reset successfully","success",() => navigate("/") )
+                    }
+                  } catch (error) {
+                    setError(`${error.response?.data.message || error.message}`);
+                  } finally {
+                    setLoading(false);
                   }
-                );
-                if (response.status == 200) {
-                  navigate("/login");
-                  setError("");
+                }else{
+                  setError({password: fieldErrors.password?._errors[0],
+                    repassword: fieldErrors.repassword?._errors[0]
+                  })
                 }
-              } catch (error) {
-                setError(`${error.response?.data.message || error.message}`);
-              } finally {
-                setLoading(false);
+              }else{
+                setError("password and re-type password are not same")
               }
+             
             }}
           >
             Update Password
@@ -106,6 +168,15 @@ function ResetPassword() {
           </h2>
           <p className="text-gray-700">{message}</p>
         </div>
+      )}
+      {showAlert && (
+        <CustomAlert
+          message={alertMessage}
+          type={alertType}
+          onClose={() => {setShowAlert(false)
+            if (alertCallback) alertCallback();
+          }}
+        />
       )}
     </div>
   );

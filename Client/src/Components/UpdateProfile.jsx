@@ -7,7 +7,7 @@ import { jwtDecode } from "jwt-decode";
 
 export default function UpdateProfile() {
   const navigate = useNavigate(); // Initialize navigate
-  const token = localStorage.getItem("token") || null;
+  const token = localStorage.getItem("token");
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
@@ -19,7 +19,8 @@ export default function UpdateProfile() {
   const [isCurrentPasswordValid, setIsCurrentPasswordValid] = useState(false);
   const [updateUsername, setUpdateUsername] = useState(false);
   const [updatePassword, setUpdatePassword] = useState(false);
-
+  const [fullName, setFullName] = useState("")
+  const [phoneNo, setPhoneNo] = useState("");
   const triggerAlert = (message, type, callback = null) => {
     setAlertMessage(message);
     setAlertType(type);
@@ -183,30 +184,21 @@ export default function UpdateProfile() {
           {showForm && (
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Choose what to update:
-                </label>
-                <div className="flex items-center space-x-4">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={updateUsername}
-                      onChange={() => setUpdateUsername(!updateUsername)}
-                    />
-                    Update Username
+                  <label
+                    htmlFor="full_name"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Full Name
                   </label>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={updatePassword}
-                      onChange={() => setUpdatePassword(!updatePassword)}
-                    />
-                    Update Password
-                  </label>
+                  <input
+                    type="text"
+                    id="full_name"
+                    placeholder="Enter your full name"
+                    className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
                 </div>
-              </div>
-
-              {updateUsername && (
                 <div>
                   <label
                     htmlFor="new_username"
@@ -223,9 +215,22 @@ export default function UpdateProfile() {
                     onChange={(e) => setNewUsername(e.target.value)}
                   />
                 </div>
-              )}
-
-              {updatePassword && (
+                <div>
+                  <label
+                    htmlFor="phone_no"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Phone No
+                  </label>
+                  <input
+                    type="text"
+                    id="phone_no"
+                    placeholder="Enter Phone No"
+                    className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                    value={phoneNo}
+                    onChange={(e) => setPhoneNo(e.target.value)}
+                  />
+                </div>
                 <div>
                   <label
                     htmlFor="new_password"
@@ -242,8 +247,6 @@ export default function UpdateProfile() {
                     onChange={(e) => setNewPassword(e.target.value)}
                   />
                 </div>
-              )}
-
               <button
                 type="submit"
                 className="w-full px-4 py-3 text-lg font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"

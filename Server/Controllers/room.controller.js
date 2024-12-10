@@ -47,7 +47,10 @@ export const createRoom = async (req, res) => {
 };
 export const roomfind = async (req, res) => {
   try {
-    const rooms = await Room.findAll();
+    const rooms = await Room.findAll({include:{
+      model:Roomtype,
+      attributes:["room_name"]
+    }});
     if (rooms.length === 0) {
       return res.status(400).json({ message: "Rooms doesn't exist" });
     }
@@ -61,7 +64,10 @@ export const roomfind = async (req, res) => {
 
 export const roomfindAdmin = async (req, res) => {
   try {
-    const rooms = await Room.findAll();
+    const rooms = await Room.findAll({include:{
+      model:Roomtype,
+      attributes:["room_name"]
+    }});
     if (rooms.length === 0) {
       return res.status(400).json({ message: "Rooms doesn't exist" });
     }
