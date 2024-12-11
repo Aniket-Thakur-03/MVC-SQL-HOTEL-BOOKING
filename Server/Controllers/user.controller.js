@@ -18,7 +18,7 @@ export const createUser = async (req, res) => {
       username,
       email,
       password,
-      role: "admin",
+      role: "simple_user",
     });
     await sendVerificationEmail(newUser.email, newUser.verification_token);
     return res

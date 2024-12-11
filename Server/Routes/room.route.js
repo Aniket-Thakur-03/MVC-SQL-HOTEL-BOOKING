@@ -3,6 +3,7 @@ import {
   avaialableRooms,
   createRoom,
   roomfind,
+  roomfindAdmin,
   updateRoom,
 } from "../Controllers/room.controller.js";
 import { adminOnly } from "../Middleware/tokenverify.js";
@@ -12,8 +13,18 @@ const roomRouter = Router();
 
 roomRouter.get("/noofrooms/:id", avaialableRooms);
 roomRouter.get("/", roomfind);
-roomRouter.get("/get", adminOnly, roomfind);
-roomRouter.post("/create/room",adminOnly, upload.fields([{name:"roomimage"},{name:"roomimagelg"}]), createRoom);
-roomRouter.patch("/update/room/:id", adminOnly, updateRoom);
+roomRouter.get("/get", adminOnly, roomfindAdmin);
+roomRouter.post(
+  "/create/room",
+  adminOnly,
+  upload.fields([{ name: "room_image_small" }, { name: "room_image_large" }]),
+  createRoom
+);
+roomRouter.patch(
+  "/update/room/:id",
+  adminOnly,
+  upload.fields([{ name: "room_image_small" }, { name: "room_image_large" }]),
+  updateRoom
+);
 
 export { roomRouter };

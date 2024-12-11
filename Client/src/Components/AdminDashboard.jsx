@@ -4,6 +4,9 @@ import AllCheckouts from "./AllCheckouts";
 import UpdatePayment from "./UpdatePayment";
 import AllBookings from "./AllBookings";
 import UpdateRoom from "./UpdateRoom";
+import { AllCountries } from "./AllCountries";
+import { AllStates } from "./AllStates";
+import { AllCities } from "./AllCities";
 
 export default function AdminDashboard() {
   const [activeOption, setActiveOption] = useState("check-ins");
@@ -14,6 +17,9 @@ export default function AdminDashboard() {
     { name: "Check-outs", value: "check-outs" },
     { name: "Update Payment Status", value: "update-payment-status" },
     { name: "Rooms", value: "update-rooms" },
+    { name: "Countries", value: "update-countries" },
+    { name: "States & UTs", value: "update-states" },
+    { name: "Citites", value: "update-cities" },
   ];
 
   return (
@@ -50,6 +56,12 @@ export default function AdminDashboard() {
             ? "Update Payment Status"
             : activeOption === "update-rooms"
             ? "Rooms"
+            : activeOption === "update-countries"
+            ? "Countries"
+            : activeOption === "update-states"
+            ? "States & UTs"
+            : activeOption === "update-cities"
+            ? "Cities"
             : "All Bookings"}
         </h1>
         <div className="bg-white p-6 rounded shadow-lg">
@@ -91,6 +103,21 @@ export default function AdminDashboard() {
             <>
               <p>Update the rooms here.</p>
               <UpdateRoom />
+            </>
+          )}
+          {activeOption === "update-countries" && (
+            <>
+              <AllCountries />
+            </>
+          )}
+          {activeOption === "update-states" && (
+            <>
+              <AllStates />
+            </>
+          )}
+          {activeOption === "update-cities" && (
+            <>
+              <AllCities />
             </>
           )}
         </div>

@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../dbconnection.js";
-import { Roomtype } from "./roomtype.model.js";
 
 const Room = sequelize.define(
   "Room",
@@ -14,10 +13,10 @@ const Room = sequelize.define(
     roomtype_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references:{
-        model:"roomtypes",
-        key:"roomtype_id"
-      }
+      references: {
+        model: "roomtypes",
+        key: "roomtype_id",
+      },
     },
 
     max_adults: {
@@ -134,6 +133,4 @@ const Room = sequelize.define(
   }
 );
 
-Room.hasOne(Roomtype,{foreignKey:"roomtype_id"})
-
-export {Room};
+export { Room };

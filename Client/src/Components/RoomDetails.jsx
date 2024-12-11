@@ -11,6 +11,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
 import { facilities } from "../data";
+import axios from "axios";
 function RoomDetails() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -48,11 +49,88 @@ function RoomDetails() {
   const [request, setRequest] = useState("");
   const [error, setError] = useState({});
   const [loading, setLoading] = useState(false);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
   const { rooms, adults, kids } = useContext(RoomContext);
+  async function fetchCountries() {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/api/country/get/active",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status == 200) {
+        setCountries(response.data.countries);
+      } else {
+        setCountries([]);
+      }
+    } catch (error) {
+      triggerAlert(`${error.response?.data.message || error.message}`, "error");
+    }
+  }
+  const [selectedCountryId, setSelectedCountryId] = useState(null);
+  const [selectedStateId, setSelectedStateId] = useState(null);
+  const [selectedCityId, setSelectedCityId] = useState(null);
+
+  async function fetchStates(countryId) {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:8000/api/state/get/active/${countryId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status === 200) {
+        setStates(response.data.states);
+        // setErrors("");
+      } else {
+        setStates([]);
+      }
+    } catch (error) {
+      // setErrors(`${error.response?.data.message || error.message}`);
+      triggerAlert(`${error.response?.data.message || error.message}`, "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+  async function fetchCities(stateId) {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/city/get/active/${stateId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status === 200) {
+        setCities(response.data.cities);
+        // setErrors("");
+      } else {
+        setCities([]);
+      }
+    } catch (error) {
+      // setErrors(`${error.response?.data.message || error.message}`);
+    }
+  }
   const navigate = useNavigate();
   const { id } = useParams();
   const room = rooms.find((room) => room.room_id === Number(id));
-  const { room_type, max_persons, max_adults, selling_price, room_id } = room;
+  const {
+    Roomtype,
+    max_persons,
+    max_adults,
+    selling_price,
+    room_id,
+    big_image_link,
+  } = room;
 
   const bookSchema = z.object({
     guestName: z
@@ -77,6 +155,7 @@ function RoomDetails() {
     address: z.string().min(1, "Address is required."),
   });
   useEffect(() => {
+    fetchCountries();
     if (error == "Session expired. Please log in again.") {
       triggerAlert(`${error}`, "error");
       localStorage.removeItem("token");
@@ -113,6 +192,9 @@ function RoomDetails() {
         no_of_kids: kids,
         room_id: room_id,
         checked_status: "not_checked",
+        country: selectedCountryId,
+        state: selectedStateId,
+        city: selectedCityId,
       };
       navigate("/review-booking", { state: { bookingData, room } });
     } else {
@@ -132,13 +214,13 @@ function RoomDetails() {
       <div className="bg-room bg-cover bg-center h-[560px] relative flex justify-center items-center">
         <div className="absolute w-full h-full bg-black/70"></div>
         <h1 className="text-6xl text-white z-20 font-primary text-center">
-          {room_type} Details
+          {Roomtype.room_name} Details
         </h1>
       </div>
       <div className="container mx-auto">
         <div className="flex flex-col lg:flex-row h-full py-24">
           <div className="w-full h-full lg:w-[60%] px-6">
-            <h2 className="h2">{room_type}</h2>
+            <h2 className="h2">{Roomtype.room_name}</h2>
             <p className="mb-8">
               Lorem ipsum dolor sit amet consectetur adipisicing elit.Ea placeat
               eos sed voluptas unde veniam eligendi a. Quaerat molestiae hic
@@ -148,8 +230,8 @@ function RoomDetails() {
             </p>
             <img
               className="mb-8"
-              src={`http://localhost:8000/public/rooms/${room_id}-lg.png`}
-              alt="Large 1st Image"
+              src={`http://localhost:8000${big_image_link}`}
+              alt="Large Image"
             />
             <div>
               <h3 className="h3 mb-3">Room Facilities</h3>
@@ -259,6 +341,73 @@ function RoomDetails() {
                   {error?.aadharCardNo && (
                     <p className="text-sm text-red-600">{error.aadharCardNo}</p>
                   )}
+                </div>
+                <div>
+                  <select
+                    className="mb-4 px-4 py-2 border rounded w-full"
+                    onChange={(e) => {
+                      const countryId = e.target.value;
+                      setSelectedCountryId(countryId);
+                      if (countryId) {
+                        fetchStates(countryId);
+                      } else {
+                        setStates([]);
+                      }
+                    }}
+                    value={selectedCountryId || ""}
+                  >
+                    <option value="" disabled>
+                      Select a country
+                    </option>
+                    {countries.map((country, index) => (
+                      <option key={index} value={country.country_id}>
+                        {country.country_name}({country.country_iso_code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <select
+                    className="mb-4 px-4 py-2 border rounded w-full"
+                    onChange={(e) => {
+                      const stateId = e.target.value;
+                      setSelectedStateId(stateId);
+                      if (stateId) {
+                        fetchCities(stateId);
+                      } else {
+                        setCities([]);
+                      }
+                    }}
+                    value={selectedStateId || ""}
+                  >
+                    <option value="" disabled>
+                      Select a State & UTs'
+                    </option>
+                    {states.map((state, index) => (
+                      <option key={index} value={state.state_id}>
+                        {state.state_name}({state.state_code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <select
+                    className="mb-4 px-4 py-2 border rounded w-full"
+                    onChange={(e) => {
+                      const cityId = e.target.value;
+                      setSelectedCityId(cityId);
+                    }}
+                    value={selectedCityId || ""}
+                  >
+                    <option value="" disabled>
+                      Select a City
+                    </option>
+                    {cities.map((city, index) => (
+                      <option key={index} value={city.state_id}>
+                        {city.city_name}({city.city_std_code})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <input

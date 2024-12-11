@@ -7,7 +7,7 @@ const Room = ({ room }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const {
     room_id,
-    room_type,
+    Roomtype,
     image_link,
     no_of_rooms,
     max_adults,
@@ -59,7 +59,7 @@ const Room = ({ room }) => {
         </div>
       </div>
       <div className="text-center">
-        <h3 className="h3">{room_type}</h3>
+        <h3 className="h3">{Roomtype.room_name}</h3>
         <h4 className="h4">Rooms Avaiable:{no_of_rooms}</h4>
         <p className="max-w-[300px] mx-auto mb-3 lg:mb-6">
           Lorem ipsum dolor sit amet consectetur adipisicing elit.

@@ -2,7 +2,6 @@ import { DataTypes } from "sequelize";
 import sequelize from "../dbconnection.js";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
-import { Booking } from "./bookings.model.js";
 
 const User = sequelize.define(
   "User",
@@ -17,9 +16,9 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    full_name:{
-      type:DataTypes.STRING,
-      allowNull:true
+    full_name: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     email: {
       type: DataTypes.STRING,
@@ -33,15 +32,6 @@ const User = sequelize.define(
     },
     phone_no: {
       type: DataTypes.STRING,
-      allowNull: true,
-    },
-    phone_verified: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    otp_phone: {
-      type: DataTypes.INTEGER(6),
       allowNull: true,
     },
     password: {
@@ -88,14 +78,9 @@ const User = sequelize.define(
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
         }
-        if(user.changed("phone_no")){
-          
-        }
       },
     },
   }
 );
-
-User.hasMany(Booking,{foreignKey:"user_id"})
 
 export { User };

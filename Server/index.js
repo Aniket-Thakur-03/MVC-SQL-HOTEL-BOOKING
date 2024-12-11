@@ -8,11 +8,7 @@ import app from "./app.js";
 await sequelize
   .authenticate()
   .then(() => {
-    console.log("DB connected");
-    return sequelize.sync({ force: false });
-  })
-  .then(() => {
-    console.log("Database synced");
+    console.log("Database connected");
     app.listen(Number(process.env.PORT), "0.0.0.0", () => {
       console.log(`Server started at port ${process.env.PORT}`);
     });

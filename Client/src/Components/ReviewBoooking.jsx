@@ -4,10 +4,16 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
+
 function ReviewBooking() {
   const location = useLocation();
   const { bookingData, room } = location.state;
-  const { room_type, selling_price, meals_price, max_persons } = room;
+  const {
+    selling_price,
+    veg_meals_price,
+    non_veg_meals_price,
+    meals_available,
+  } = room;
 
   const [selectedMeals, setSelectedMeals] = useState({
     breakfast: false,
@@ -15,9 +21,11 @@ function ReviewBooking() {
     dinner: false,
   });
   const [mealsChosen, setMealsChosen] = useState(false);
+  const [mealType, setMealType] = useState(""); // "veg" or "non-veg"
   const [mealsPrice, setMealsPrice] = useState(0);
   const [totalPayment, setTotalPayment] = useState(selling_price);
   const [tax, setTax] = useState(0);
+  const [noOfDays, setNoOfDays] = useState(1);
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -27,28 +35,52 @@ function ReviewBooking() {
     const updatedMeals = { ...selectedMeals, [meal]: isChecked };
     setSelectedMeals(updatedMeals);
   };
+
   const triggerAlert = (message, type) => {
     setAlertMessage(message);
     setAlertType(type);
     setShowAlert(true);
   };
+
   useEffect(() => {
+    const calculateNoOfDays = () => {
+      const checkInDate = new Date(bookingData.check_in_date);
+      const checkOutDate = new Date(bookingData.check_out_date);
+      const diffTime = Math.abs(checkOutDate - checkInDate);
+      return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    };
+
+    const days = calculateNoOfDays();
+    setNoOfDays(days);
+
+    const mealPricePerPerson =
+      mealType === "veg" ? veg_meals_price : non_veg_meals_price;
     const totalSelectedMealsPrice =
       (selectedMeals.breakfast + selectedMeals.lunch + selectedMeals.dinner) *
-      meals_price *
-      (bookingData.no_of_adults + bookingData.no_of_kids);
-    const taxAmount = (selling_price + totalSelectedMealsPrice) * 0.12;
+      mealPricePerPerson *
+      (bookingData.no_of_adults + bookingData.no_of_kids) *
+      days;
+
+    const taxAmount = (selling_price * days + totalSelectedMealsPrice) * 0.12;
     setMealsPrice(totalSelectedMealsPrice);
     setTax(taxAmount);
-    setTotalPayment(selling_price + totalSelectedMealsPrice + taxAmount);
-  }, [selectedMeals, mealsChosen, selling_price, bookingData, meals_price]);
+    setTotalPayment(selling_price * days + totalSelectedMealsPrice + taxAmount);
+  }, [
+    selectedMeals,
+    mealsChosen,
+    mealType,
+    selling_price,
+    bookingData,
+    veg_meals_price,
+    non_veg_meals_price,
+  ]);
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      if (mealsChosen && mealsPrice == 0) {
+      if (mealsChosen && (!mealType || mealsPrice === 0)) {
         throw new Error(
-          "You have chosen meals.please select atleast 1 option from Breakfast, Lunch and Dinner"
+          "Please select a meal type and at least one meal option."
         );
       }
       const response = await axios.post(
@@ -60,6 +92,11 @@ function ReviewBooking() {
             room_price: selling_price,
             meal_price: mealsPrice,
             meal_chosen: mealsChosen,
+            meal_type: mealType,
+            breakfast: selectedMeals.breakfast,
+            lunch: selectedMeals.lunch,
+            dinner: selectedMeals.dinner,
+            no_of_days: noOfDays,
           },
         },
         {
@@ -68,7 +105,7 @@ function ReviewBooking() {
           },
         }
       );
-      if (response.status == 201) {
+      if (response.status === 201) {
         toast.success(`${response.data.message}`);
       }
     } catch (error) {
@@ -78,7 +115,7 @@ function ReviewBooking() {
       setLoading(false);
     }
   };
-
+  console.log(bookingData);
   return (
     <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <h2 className="text-2xl font-bold mb-6 text-center">
@@ -123,79 +160,110 @@ function ReviewBooking() {
           </p>
         </div>
       </div>
+      {meals_available ? (
+        <div>
+          <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+            <h3 className="text-lg font-semibold mb-4">Meals</h3>
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={mealsChosen}
+                  onChange={(e) => {
+                    setMealsChosen(e.target.checked);
+                    setSelectedMeals({
+                      breakfast: false,
+                      lunch: false,
+                      dinner: false,
+                    });
+                    setMealType("");
+                    setMealsPrice(0); // Reset meal price when unchecked
+                  }}
+                />
+                Do you want meals?
+              </label>
+            </div>
 
-      {/* Meals Selection */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h3 className="text-lg font-semibold mb-4">Meals</h3>
-        <div className="mb-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              className="mr-2"
-              checked={mealsChosen}
-              onChange={(e) => {
-                setMealsChosen(e.target.checked);
-                setSelectedMeals({
-                  breakfast: false,
-                  lunch: false,
-                  dinner: false,
-                });
-                setMealsPrice(0); // Reset meal price when unchecked
-              }}
-            />
-            Do you want meals?
-          </label>
-        </div>
-
-        {mealsChosen && (
-          <div>
-            <p className="text-sm mb-2 text-gray-600">
-              Price per meal per person: ₹{meals_price}
-            </p>
-            <label className="block">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedMeals.breakfast}
-                onChange={(e) =>
-                  handleMealChange("breakfast", e.target.checked)
-                }
-              />
-              Breakfast
-            </label>
-            <label className="block">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedMeals.lunch}
-                onChange={(e) => handleMealChange("lunch", e.target.checked)}
-              />
-              Lunch
-            </label>
-            <label className="block">
-              <input
-                type="checkbox"
-                className="mr-2"
-                checked={selectedMeals.dinner}
-                onChange={(e) => handleMealChange("dinner", e.target.checked)}
-              />
-              Dinner
-            </label>
+            {mealsChosen && (
+              <div>
+                <div className="mb-4">
+                  <label>
+                    <input
+                      type="radio"
+                      name="mealType"
+                      value="veg"
+                      checked={mealType === "veg"}
+                      onChange={(e) => setMealType(e.target.value)}
+                      className="mr-2"
+                    />
+                    Veg
+                  </label>
+                  <label className="ml-4">
+                    <input
+                      type="radio"
+                      name="mealType"
+                      value="non-veg"
+                      checked={mealType === "non-veg"}
+                      onChange={(e) => setMealType(e.target.value)}
+                      className="mr-2"
+                    />
+                    Non-Veg
+                  </label>
+                </div>
+                <label className="block">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={selectedMeals.breakfast}
+                    onChange={(e) =>
+                      handleMealChange("breakfast", e.target.checked)
+                    }
+                  />
+                  Breakfast
+                </label>
+                <label className="block">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={selectedMeals.lunch}
+                    onChange={(e) =>
+                      handleMealChange("lunch", e.target.checked)
+                    }
+                  />
+                  Lunch
+                </label>
+                <label className="block">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={selectedMeals.dinner}
+                    onChange={(e) =>
+                      handleMealChange("dinner", e.target.checked)
+                    }
+                  />
+                  Dinner
+                </label>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div>Meal Not avaiable</div>
+      )}
+      {/* Meals Selection */}
 
       {/* Payment Summary */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
         <h3 className="text-lg font-semibold mb-4">Payment Summary</h3>
         <p>
-          <strong>Room Price:</strong> ₹{selling_price}
+          <strong>Room Price:</strong> ₹{selling_price} x {noOfDays} days
         </p>
         <p>
           <strong>Meals Price:</strong> ₹{mealsPrice}
         </p>
         <p>
-          <strong>GST (12%):</strong> ₹{tax}
+          <strong>Taxes:</strong> ₹{tax}
         </p>
         <p className="font-bold">
           <strong>Total Payment:</strong> ₹{totalPayment}

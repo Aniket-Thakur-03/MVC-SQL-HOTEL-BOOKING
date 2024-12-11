@@ -33,27 +33,27 @@ const Booking = sequelize.define(
       allowNull: false,
       defaultValue: false,
     },
-    meal_type:{
-      type:DataTypes.STRING,
-      allowNull:true,
-      validate:{
-        isIn:{
-          args:[['veg','non-veg']],
-          msg:"Meal type can be veg or non-veg"
-        }
-      }
+    meal_type: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      validate: {
+        isIn: {
+          args: [["veg", "non-veg"]],
+          msg: "Meal type can be veg or non-veg",
+        },
+      },
     },
-    breakfast:{
-      type:DataTypes.BOOLEAN,
-      allowNull:true
+    breakfast: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
     },
-    lunch:{
-      type:DataTypes.BOOLEAN,
-      allowNull:true
+    lunch: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
     },
-    dinner:{
-      type:DataTypes.BOOLEAN,
-      allowNull:true
+    dinner: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
     },
     meal_price: {
       type: DataTypes.INTEGER,
@@ -107,9 +107,9 @@ const Booking = sequelize.define(
         },
       },
     },
-    no_of_days:{
-      type:DataTypes.INTEGER,
-      allowNull:false
+    no_of_days: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
     guest_name: {
       type: DataTypes.STRING,
@@ -143,29 +143,29 @@ const Booking = sequelize.define(
       type: DataTypes.CHAR(12),
       allowNull: false,
     },
-    country_id:{
-      type:DataTypes.INTEGER,
-      allowNull:false,
-      references:{
-        model:"countries",
-        key:"country_id"
-      }
+    country_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "countries",
+        key: "country_id",
+      },
     },
-    state_id:{
-      type:DataTypes.INTEGER,
-      allowNull:false,
-      references:{
-        model:"states",
-        key:"state_id"
-      }
+    state_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "states",
+        key: "state_id",
+      },
     },
-    city_id:{
-      type:DataTypes.INTEGER,
-      allowNull:false,
-      references:{
-        model:"cities",
-        key:"city_id"
-      }
+    city_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "cities",
+        key: "city_id",
+      },
     },
     address: {
       type: DataTypes.STRING,
@@ -199,14 +199,13 @@ const Booking = sequelize.define(
     updatedAt: "updated_at",
   }
 );
+User.hasMany(Booking, { foreignKey: "user_id" });
 
-
-
-Booking.belongsTo(User, { foreignKey: "user_id"});
+Booking.belongsTo(User, { foreignKey: "user_id" });
 
 Room.hasMany(Booking, {
-  foreignKey: "room_id"
+  foreignKey: "room_id",
 });
-Booking.belongsTo(Room, { foreignKey: "room_id"});
+Booking.belongsTo(Room, { foreignKey: "room_id" });
 
 export { Booking };
