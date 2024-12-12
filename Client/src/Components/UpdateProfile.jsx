@@ -17,10 +17,9 @@ export default function UpdateProfile() {
   const [newpassword, setNewPassword] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [isCurrentPasswordValid, setIsCurrentPasswordValid] = useState(false);
-  const [updateUsername, setUpdateUsername] = useState(false);
-  const [updatePassword, setUpdatePassword] = useState(false);
-  const [fullName, setFullName] = useState("")
+  const [fullName, setFullName] = useState("");
   const [phoneNo, setPhoneNo] = useState("");
+
   const triggerAlert = (message, type, callback = null) => {
     setAlertMessage(message);
     setAlertType(type);
@@ -28,13 +27,44 @@ export default function UpdateProfile() {
     setShowAlert(true);
   };
 
+  // Fetch user data on mount
   useEffect(() => {
     if (!token) {
       triggerAlert("You are not logged in, please login", "error");
+      return;
     }
-  }, []);
+
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:8000/api/users/get/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const { full_name, phone_no, username } = response.data.user;
+        setFullName(full_name || "");
+        setPhoneNo(phone_no || "");
+        setNewUsername(username || "");
+      } catch (error) {
+        triggerAlert("Failed to fetch user profile", "error");
+        console.error(error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [token]);
 
   const updateSchema = z.object({
+    fullName: z.string().optional(),
+    phoneNo: z.string().min(10, "Phone no must be 10 digits").optional(),
+    newusername: z
+      .string()
+      .min(4, "Username must have at least 4 characters")
+      .optional(),
     password: z
       .string()
       .min(8, "Password must have at least 8 characters")
@@ -44,7 +74,8 @@ export default function UpdateProfile() {
       .regex(
         /[@$!%*?&#]/,
         "Password must contain at least one special character (@$!%*?&#)"
-      ),
+      )
+      .optional(),
     newpassword: z
       .string()
       .min(8, "Password must have at least 8 characters")
@@ -54,8 +85,8 @@ export default function UpdateProfile() {
       .regex(
         /[@$!%*?&#]/,
         "Password must contain at least one special character (@$!%*?&#)"
-      ),
-    newusername: z.string().min(4, "Username is required"),
+      )
+      .optional(),
   });
 
   const checkCurrentPassword = async () => {
@@ -87,33 +118,24 @@ export default function UpdateProfile() {
     e.preventDefault();
 
     const id = jwtDecode(token).user_id;
-    const flag = Number(updateUsername) + Number(updatePassword);
 
+    // Prepare formData only with filled fields
     const formData = {};
-    if (updateUsername) formData.newusername = newusername;
-    if (updatePassword) {
-      formData.password = password;
-      formData.newpassword = newpassword;
-    }
+    if (fullName) formData.fullName = fullName;
+    if (phoneNo) formData.phoneNo = phoneNo;
+    if (newusername) formData.newusername = newusername;
+    if (password) formData.password = password;
+    if (newpassword) formData.newpassword = newpassword;
 
-    let validate = { success: true };
-    if (updateUsername && updatePassword) {
-      validate = updateSchema.safeParse(formData);
-    } else if (updateUsername) {
-      const usernameSchema = updateSchema.pick({ newusername: true });
-      validate = usernameSchema.safeParse({ newusername });
-    } else if (updatePassword) {
-      const passwordSchema = updateSchema.pick({
-        password: true,
-        newpassword: true,
-      });
-      validate = passwordSchema.safeParse({ password, newpassword });
-    }
+    // Validate only provided fields
+    const validate = updateSchema.safeParse(formData);
 
     if (!validate.success) {
       const fieldErrors = validate.error.format();
       setAlertMessage(
-        fieldErrors.newusername?._errors[0] ||
+        fieldErrors.fullName?._errors[0] ||
+          fieldErrors.phoneNo?._errors[0] ||
+          fieldErrors.newusername?._errors[0] ||
           fieldErrors.password?._errors[0] ||
           fieldErrors.newpassword?._errors[0]
       );
@@ -125,7 +147,7 @@ export default function UpdateProfile() {
     try {
       const response = await axios.patch(
         `http://localhost:8000/api/users/update/info/${id}`,
-        { ...formData, flag },
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -184,74 +206,74 @@ export default function UpdateProfile() {
           {showForm && (
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                  <label
-                    htmlFor="full_name"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    id="full_name"
-                    placeholder="Enter your full name"
-                    className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="new_username"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    New Username
-                  </label>
-                  <input
-                    type="text"
-                    id="new_username"
-                    placeholder="Enter your new username"
-                    className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                    value={newusername}
-                    onChange={(e) => setNewUsername(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="phone_no"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Phone No
-                  </label>
-                  <input
-                    type="text"
-                    id="phone_no"
-                    placeholder="Enter Phone No"
-                    className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                    value={phoneNo}
-                    onChange={(e) => setPhoneNo(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="new_password"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    id="new_password"
-                    placeholder="Enter your new password"
-                    className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                    value={newpassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </div>
+                <label
+                  htmlFor="full_name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  id="full_name"
+                  placeholder="Enter your full name"
+                  className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="new_username"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  New Username
+                </label>
+                <input
+                  type="text"
+                  id="new_username"
+                  placeholder="Enter your new username"
+                  className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  value={newusername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="phone_no"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Phone No
+                </label>
+                <input
+                  type="text"
+                  id="phone_no"
+                  placeholder="Enter Phone No"
+                  className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  value={phoneNo}
+                  onChange={(e) => setPhoneNo(e.target.value)}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="new_password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  id="new_password"
+                  placeholder="Enter your new password"
+                  className="w-full px-4 py-3 mt-1 text-base text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                  value={newpassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
               <button
                 type="submit"
                 className="w-full px-4 py-3 text-lg font-medium text-white bg-blue-600 rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               >
-                Update
+                Update Profile
               </button>
             </form>
           )}
@@ -260,11 +282,13 @@ export default function UpdateProfile() {
 
       {showAlert && (
         <CustomAlert
-          message={alertMessage}
           type={alertType}
+          message={alertMessage}
           onClose={() => {
             setShowAlert(false);
-            if (alertCallback) alertCallback(); // Execute callback after closing the alert
+            if (alertCallback) {
+              alertCallback();
+            }
           }}
         />
       )}

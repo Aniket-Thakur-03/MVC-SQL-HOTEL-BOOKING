@@ -11,6 +11,7 @@ const Room = ({ room }) => {
     image_link,
     no_of_rooms,
     max_adults,
+    meals_available,
     max_persons,
     retail_price,
     selling_price,
@@ -65,6 +66,7 @@ const Room = ({ room }) => {
           Lorem ipsum dolor sit amet consectetur adipisicing elit.
         </p>
       </div>
+
       <div>
         {isLoggedIn ? (
           <Link
@@ -97,6 +99,13 @@ const Room = ({ room }) => {
             )}
           </p>
         )}
+      </div>
+      <div
+        className={`text-center text-base ${
+          meals_available ? "text-green-500" : "text-red-500"
+        }`}
+      >
+        {meals_available ? "Meals Available" : "Meals Not Available"}
       </div>
       {showAlert && (
         <CustomAlert

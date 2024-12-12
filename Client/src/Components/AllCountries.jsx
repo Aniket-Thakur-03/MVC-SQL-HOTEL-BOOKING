@@ -142,7 +142,7 @@ export const AllCountries = () => {
                     setEditCountryId(country.country_id);
                     setIsEditing(true);
                   }}
-                  className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                  className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                 >
                   Edit
                 </button>

@@ -5,6 +5,7 @@ import {
   resetPassword,
   resetPasswordToken,
   sendforgetPassword,
+  sendInfo,
   updateUserInfo,
   verifyPassword,
   verifyUserEmail,
@@ -30,6 +31,7 @@ userRouter.post(
 );
 userRouter.post("/send/reset/password", sendforgetPassword);
 userRouter.get("/forget/password/:id", resetPasswordToken);
+userRouter.get("/get/profile", authenticateTokenUser, sendInfo);
 userRouter.post("/forget/password", verifypassword, resetPassword);
 userRouter.patch(
   "/update/info/:id",

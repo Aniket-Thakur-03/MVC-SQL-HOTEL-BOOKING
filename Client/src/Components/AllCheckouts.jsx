@@ -156,6 +156,26 @@ function AllCheckouts() {
             <p className="text-sm text-gray-600 mb-1">
               <strong>Guest Phone No:</strong> {item.guest_phone_no}
             </p>
+            {item.meal_chosen && (
+              <div>
+                <p className="text-sm text-gray-600">
+                  Meals Price: {item.meal_price}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Meal Type: {item.meal_type}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Meal Time:
+                  {item.breakfast && (
+                    <p className="text-sm text-gray-600">Breakfast</p>
+                  )}
+                  {item.lunch && <p className="text-sm text-gray-600">Lunch</p>}
+                  {item.dinner && (
+                    <p className="text-sm text-gray-600">Dinner</p>
+                  )}
+                </p>
+              </div>
+            )}
             <p className="text-sm text-gray-600 mb-1">
               <strong>Check-in Date:</strong>{" "}
               {new Date(item.check_in_date).toLocaleDateString()}
@@ -163,9 +183,6 @@ function AllCheckouts() {
             <p className="text-sm text-gray-600 mb-1">
               <strong>Check-out Date:</strong>{" "}
               {new Date(item.check_out_date).toLocaleDateString()}
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
-              <strong>Room Type:</strong> {item.Room.room_type}
             </p>
             <p className="text-sm text-gray-600 mb-1">
               <strong>Payment Due:</strong> ₹{item.payment_due}

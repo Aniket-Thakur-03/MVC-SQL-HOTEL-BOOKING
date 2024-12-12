@@ -209,25 +209,29 @@ export const AllCities = () => {
           <table className="min-w-full border border-gray-300">
             <thead>
               <tr className="bg-gray-200">
-                <th className="px-4 py-2 border">Name</th>
-                <th className="px-4 py-2 border">STD Code</th>
-                <th className="px-4 py-2 border">Active</th>
-                <th className="px-4 py-2 border">Actions</th>
+                <th className="px-2 py-2 border">Name</th>
+                <th className="px-2 py-2 border">STD Code</th>
+                <th className="px-2 py-2 border">Active</th>
+                <th className="px-2 py-2 border">Actions</th>
               </tr>
             </thead>
             <tbody>
               {cities.map((city) => (
                 <tr key={city.city_id} className="text-center">
-                  <td className="px-4 py-2 border">{city.city_name}</td>
-                  <td className="px-4 py-2 border">{city.city_std_code}</td>
+                  <td className="px-2 py-2 border text-center">
+                    {city.city_name}
+                  </td>
+                  <td className="px-2 py-2 border text-center">
+                    {city.city_std_code}
+                  </td>
                   <td
-                    className={`px-4 py-2 border text-white ${
+                    className={`px-2 py-2 border text-white ${
                       city.isActive ? "bg-green-500" : "bg-red-500"
                     }`}
                   >
                     {city.isActive ? "Active" : "Inactive"}
                   </td>
-                  <td className="px-4 py-2 border">
+                  <td className="px-2 py-2 border">
                     <button
                       onClick={() => {
                         setFormValues({
@@ -238,7 +242,7 @@ export const AllCities = () => {
                         setEditCityId(city.city_id);
                         setIsEditing(true);
                       }}
-                      className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                      className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                       Edit
                     </button>

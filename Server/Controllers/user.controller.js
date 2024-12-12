@@ -92,7 +92,7 @@ export const updateUserInfo = async (req, res) => {
       .status(400)
       .json({ message: "access unauthorized, id different" });
   }
-  const { newusername, newpassword } = req.body;
+  const { fullName, phoneNo, newusername, newpassword } = req.body;
   try {
     const user = await User.findByPk(user_id);
     if (!user) {
@@ -101,6 +101,8 @@ export const updateUserInfo = async (req, res) => {
 
     if (newusername) user.username = newusername;
     if (newpassword) user.password = newpassword;
+    if (fullName) user.full_name = fullName;
+    if (phoneNo) user.phone_no = phoneNo;
     const token = jwt.sign(
       {
         user_id: user_id,
@@ -205,5 +207,19 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(400).json({ message: error.message });
+  }
+};
+
+export const sendInfo = async (req, res) => {
+  const { user_id } = req.user;
+  try {
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(400).json({ message: "No user exists" });
+    }
+    return res.status(200).json({ user: user });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
   }
 };

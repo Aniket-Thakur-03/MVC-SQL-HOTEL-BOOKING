@@ -5,6 +5,7 @@ import {
   addCountry,
   deleteCountry,
   editCountry,
+  getCountryId,
   readCountry,
   readCountryUser,
 } from "../Controllers/country.controller.js";
@@ -13,6 +14,7 @@ const countryRouter = Router();
 
 countryRouter.get("/get", authenticateTokenUser, readCountry);
 countryRouter.get("/get/active", authenticateTokenUser, readCountryUser);
+countryRouter.get("/get/country/:id", authenticateTokenUser, getCountryId);
 countryRouter.post("/create/country", adminOnly, addCountry);
 countryRouter.patch("/edit/country/:id", adminOnly, editCountry);
 countryRouter.patch("/edit/active/:id", adminOnly, activeUpdate);

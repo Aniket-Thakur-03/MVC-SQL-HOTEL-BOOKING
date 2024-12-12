@@ -5,6 +5,7 @@ import {
   addCity,
   deleteCity,
   editCity,
+  getCityId,
   readCity,
   readCityUser,
 } from "../Controllers/city.controller.js";
@@ -13,6 +14,7 @@ const cityRouter = Router();
 
 cityRouter.get("/get/:id", authenticateTokenUser, readCity);
 cityRouter.get("/get/active/:id", authenticateTokenUser, readCityUser);
+cityRouter.get("/get/city/:id", authenticateTokenUser, getCityId);
 cityRouter.post("/create/city", adminOnly, addCity);
 cityRouter.patch("/edit/city/:id", adminOnly, editCity);
 cityRouter.patch("/edit/active/:id", adminOnly, activeUpdateCity);

@@ -54,51 +54,36 @@ export const loginInfoCheck = (req, res, next) => {
 };
 
 export const userUpdateCheck = (req, res, next) => {
-  const { newusername, newpassword, flag, password } = req.body;
-
-  if (flag == 0) {
+  const { newusername, newpassword, fullName, phoneNo, password } = req.body;
+  if (newusername) {
+    if (newusername.length < 4) {
+      return res.status(400).json({ message: "Incorrect username format" });
+    }
+  }
+  if (newpassword) {
+    const pstring = validatePassword(newpassword);
+    if (pstring == !"Password correct") {
+      return res.status(400).json({ message: `${pstring}` });
+    }
+    if (newpassword === password) {
+      return res
+        .status(400)
+        .json({
+          message: "Password is same as before, change it or don't enter it",
+        });
+    }
+  }
+  if (fullName && !/^[a-zA-Z ]+$/.test(fullName)) {
     return res
       .status(400)
-      .json({
-        message: "Please enter either new username or new password or both",
-      });
+      .json({ message: "full name must be composed of letters and spaces" });
   }
-
-  if (flag == 1) {
-    if (newusername && newusername.length < 4) {
-      return res
-        .status(400)
-        .json({ message: "Username should be at least 4 characters" });
-    }
-    if (newpassword) {
-      const validationMessage = validatePassword(newpassword);
-      if (validationMessage !== "Password correct") {
-        return res.status(400).json({ message: validationMessage });
-      }
-      if (password === newpassword) {
-        return res.status(400).json({ message: "Password same as before" });
-      }
-    }
-    return next();
+  if (phoneNo && !/^\d{10}$/.test(phoneNo)) {
+    return res
+      .status(400)
+      .json({ message: "Phone no must be exactly of 10 digits" });
   }
-
-  if (flag == 2) {
-    if (newusername.length < 4) {
-      return res
-        .status(400)
-        .json({ message: "Username should be at least 4 characters" });
-    }
-    const validationMessage = validatePassword(newpassword);
-    if (validationMessage !== "Password correct") {
-      return res.status(400).json({ message: validationMessage });
-    }
-    if (password === newpassword) {
-      return res.status(400).json({ message: "Password same as before" });
-    }
-    return next();
-  }
-
-  return res.status(400).json({ message: "No update information" });
+  next();
 };
 
 export const verifypassword = (req, res, next) => {

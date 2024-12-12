@@ -1,3 +1,4 @@
+import { response } from "express";
 import { Country } from "../Models/country.model.js";
 
 export const addCountry = async (req, res) => {
@@ -118,6 +119,17 @@ export const deleteCountry = async (req, res) => {
     return res.status(200).json({ message: "Country Deleted" });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const getCountryId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const country = await Country.findByPk(Number(id));
+    return res.status(200).json({ country: country });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };

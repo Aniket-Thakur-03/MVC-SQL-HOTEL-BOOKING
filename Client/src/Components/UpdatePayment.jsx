@@ -116,9 +116,6 @@ function UpdatePayment() {
             {data.booking_status}
           </p>
           <p className="text-sm text-gray-600 mb-1">
-            <strong>Room Type:</strong> {data.Room.room_type}
-          </p>
-          <p className="text-sm text-gray-600 mb-1">
             <strong>Room Price:</strong> ₹{data.room_price}
           </p>
           {data.meal_chosen && (
@@ -147,7 +144,7 @@ function UpdatePayment() {
                 try {
                   const response = await axios.patch(
                     `http://localhost:8000/api/booking/update/payment/${id}`,
-                    { price: data.Room.price, amount: Number(amount) },
+                    { price: data.room_price, amount: Number(amount) },
                     {
                       headers: {
                         Authorization: `Bearer ${localStorage.getItem(

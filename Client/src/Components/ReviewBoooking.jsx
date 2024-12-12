@@ -7,7 +7,7 @@ import CustomAlert from "./Notification/CustomAlert";
 
 function ReviewBooking() {
   const location = useLocation();
-  const { bookingData, room } = location.state;
+  const { bookingData, room, csc } = location.state;
   const {
     selling_price,
     veg_meals_price,
@@ -90,12 +90,12 @@ function ReviewBooking() {
             ...bookingData,
             payment_due: totalPayment,
             room_price: selling_price,
-            meal_price: mealsPrice,
-            meal_chosen: mealsChosen,
-            meal_type: mealType,
-            breakfast: selectedMeals.breakfast,
-            lunch: selectedMeals.lunch,
-            dinner: selectedMeals.dinner,
+            meal_price: meals_available ? mealsPrice : 0,
+            meal_chosen: meals_available ? mealsChosen : 0,
+            meal_type: meals_available ? mealType : null,
+            breakfast: meals_available ? selectedMeals.breakfast : false,
+            lunch: meals_available ? selectedMeals.lunch : false,
+            dinner: meals_available ? selectedMeals.dinner : false,
             no_of_days: noOfDays,
           },
         },
@@ -107,6 +107,7 @@ function ReviewBooking() {
       );
       if (response.status === 201) {
         toast.success(`${response.data.message}`);
+        setTimeout(() => (window.location.href = "/"), 3000);
       }
     } catch (error) {
       console.error("Booking failed", error);
@@ -134,6 +135,15 @@ function ReviewBooking() {
           </p>
           <p>
             <strong>Phone No:</strong> {bookingData.guest_phone_no}
+          </p>
+          <p>
+            <strong>Country:</strong> {csc.country}
+          </p>
+          <p>
+            <strong>State:</strong> {csc.state}
+          </p>
+          <p>
+            <strong>City:</strong> {csc.city}
           </p>
           <p>
             <strong>Address:</strong> {bookingData.address}
@@ -196,6 +206,7 @@ function ReviewBooking() {
                       checked={mealType === "veg"}
                       onChange={(e) => setMealType(e.target.value)}
                       className="mr-2"
+                      defaultChecked
                     />
                     Veg
                   </label>
@@ -249,7 +260,9 @@ function ReviewBooking() {
           </div>
         </div>
       ) : (
-        <div>Meal Not avaiable</div>
+        <div className="mx-auto text-center text-xl text-red-500">
+          Meal Not avaiable
+        </div>
       )}
       {/* Meals Selection */}
 

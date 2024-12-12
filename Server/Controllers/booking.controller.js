@@ -58,6 +58,14 @@ export const createBooking = async (req, res) => {
       guest_aadhar_card: bookingData.guest_aadhar_card,
       address: bookingData.address,
       special_requests: bookingData.special_requests,
+      country_id: Number(bookingData.country),
+      state_id: Number(bookingData.state),
+      city_id: Number(bookingData.city),
+      no_of_days: Number(bookingData.no_of_days),
+      breakfast: bookingData.breakfast,
+      lunch: bookingData.lunch,
+      dinner: bookingData.dinner,
+      meal_type: bookingData.meal_type,
     });
     await Room.update(
       { no_of_rooms: checkRoomAvailability.no_of_rooms - 1 },
@@ -87,12 +95,6 @@ export const getBookingDetailsUserId = async (req, res) => {
     const bookings = await Booking.findAll({
       where: { user_id: req.params.id },
       order: [["created_at", "DESC"]],
-      include: [
-        {
-          model: Room,
-          attributes: ["room_type", "selling_price"],
-        },
-      ],
     });
     if (bookings.length === 0) {
       return res.status(200).json({ message: "No Booking Done" });
@@ -106,12 +108,6 @@ export const getBookingDetailsUserId = async (req, res) => {
 export const getAllBookings = async (req, res) => {
   try {
     const bookings = await Booking.findAll({
-      include: [
-        {
-          model: Room,
-          attributes: ["room_type", "selling_price"],
-        },
-      ],
       order: [["created_at", "DESC"]],
     });
     return res.status(200).json({ bookings: bookings });
@@ -128,12 +124,6 @@ export const getBookingDetailsBookingId = async (req, res) => {
   try {
     const booking = await Booking.findOne({
       where: { booking_id: req.params.id },
-      include: [
-        {
-          model: Room,
-          attributes: ["room_type", "selling_price"],
-        },
-      ],
     });
     if (!booking) {
       return res.status(400).json({ message: "Booking does not exist" });
@@ -154,13 +144,7 @@ export const getAllBookingsCheckIns = async (req, res) => {
   }
   try {
     const bookings = await Booking.findAll({
-      where: { check_in_date: req.query.date },
-      include: [
-        {
-          model: Room,
-          attributes: ["room_type", "selling_price"],
-        },
-      ],
+      where: { check_in_date: req.query.date, booking_status: "pending" },
       order: [["created_at", "DESC"]],
     });
     if (bookings.length === 0) {
@@ -182,12 +166,6 @@ export const getAllBookingsCheckOuts = async (req, res) => {
   try {
     const bookings = await Booking.findAll({
       where: { check_out_date: req.query.date },
-      include: [
-        {
-          model: Room,
-          attributes: ["room_type"],
-        },
-      ],
       order: [["created_at", "DESC"]],
     });
     if (bookings.length === 0) {

@@ -117,7 +117,13 @@ export const avaialableRooms = async (req, res) => {
 };
 
 export const updateRoom = async (req, res) => {
-  // const filePaths = [];
+  const filePaths = [];
+  if (req.files["room_image_small"]) {
+    filePaths.push(`/uploads/${req.files["room_image_small"][0].filename}`);
+  }
+  if (req.files["room_image_large"]) {
+    filePaths.push(`/uploads/${req.files["room_image_large"][0].filename}`);
+  }
   const transaction = await sequelize.transaction();
   try {
     const { id } = req.params;
@@ -145,7 +151,7 @@ export const updateRoom = async (req, res) => {
     //   retail_price,
     //   selling_price
     // );
-    console.log(req.body);
+    // console.log(req.body);
 
     const room = await Room.findByPk(Number(id), { transaction: transaction });
     if (room_name) {
@@ -180,6 +186,8 @@ export const updateRoom = async (req, res) => {
     if (selling_price) room.selling_price = Number(selling_price);
     if (no_of_rooms) room.no_of_rooms = Number(no_of_rooms);
     if (state) room.state = state;
+    if (req.files["room_image_small"]) room.image_link = filePaths[0];
+    if (req.files["room_image_large"]) room.big_image_link = filePaths[1];
     room.updated_by = username;
     await room.save({ transaction: transaction });
     await transaction.commit();

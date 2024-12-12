@@ -115,3 +115,14 @@ export const deleteCity = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const getCityId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const country = await City.findByPk(Number(id));
+    return res.status(200).json({ city: country });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};

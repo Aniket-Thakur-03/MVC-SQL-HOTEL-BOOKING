@@ -187,6 +187,8 @@ function UpdateRoom() {
               <th className="border border-gray-300 px-4 py-2">
                 Meals Available
               </th>
+              <th className="border border-gray-300 px-4 py-2">Max Adults</th>
+              <th className="border border-gray-300 px-4 py-2">Max Persons</th>
               <th className="border border-gray-300 px-4 py-2">No of Rooms</th>
               <th className="border border-gray-300 px-4 py-2">State</th>
               <th className="border border-gray-300 px-4 py-2">Actions</th>
@@ -195,28 +197,34 @@ function UpdateRoom() {
           <tbody>
             {rooms.map((room) => (
               <tr key={room.room_id} className="hover:bg-gray-50">
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   {room.room_id}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   {room.Roomtype.room_name}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   ₹{room.retail_price}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   ₹{room.selling_price}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   ₹{room.veg_meals_price}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   ₹{room.non_veg_meals_price}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   {room.meals_available ? "Yes" : "No"}
                 </td>
-                <td className="border border-gray-300 px-4 py-2">
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  {room.max_adults}
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                  {room.max_persons}
+                </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
                   {room.no_of_rooms}
                 </td>
                 <td
@@ -226,7 +234,7 @@ function UpdateRoom() {
                 >
                   {room.state}
                 </td>
-                <td className="border border-gray-300 px-8 flex  py-2">
+                <td className="border border-gray-300 px-8 flex py-4">
                   <button
                     onClick={() => handleEdit(room)}
                     className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
@@ -248,6 +256,25 @@ function UpdateRoom() {
             </h2>
             <form className="grid grid-cols-2 gap-4 md:grid-cols-1">
               {Object.keys(initialFormState).map((key) => {
+                if (key === "room_id") {
+                  // Skip the room_id field for the add form
+                  if (isAdding) return null;
+                  // Show room_id as read-only for the edit form
+                  return (
+                    <div key={key}>
+                      <label className="block text-sm font-medium capitalize mb-2">
+                        {key.replace(/_/g, " ")}:
+                      </label>
+                      <input
+                        type="text"
+                        name={key}
+                        value={formValues[key] || ""}
+                        readOnly
+                        className="border border-gray-300 rounded px-3 py-2 w-full bg-gray-100 cursor-not-allowed focus:outline-none"
+                      />
+                    </div>
+                  );
+                }
                 if (key === "meals_available") {
                   return (
                     <div key={key}>

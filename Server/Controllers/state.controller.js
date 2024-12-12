@@ -113,3 +113,14 @@ export const deleteState = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const getStateId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const country = await State.findByPk(Number(id));
+    return res.status(200).json({ state: country });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};

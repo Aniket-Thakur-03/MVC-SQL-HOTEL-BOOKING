@@ -156,18 +156,30 @@ function AllCheckins() {
               {new Date(item.check_out_date).toLocaleDateString()}
             </p>
             <p className="text-sm text-gray-600 mb-1">
-              <strong>Room Type:</strong> {item.Room.room_type}
-            </p>
-            <p className="text-sm text-gray-600 mb-1">
               <strong>Payment Due:</strong> ₹{item.payment_due}
             </p>
             <p className="text-sm text-gray-600 mb-1">
               <strong>Room Price:</strong> ₹{item.room_price}
             </p>
             {item.meal_chosen && (
-              <p className="text-sm text-gray-600 mb-1">
-                <strong>Meals Price:</strong> ₹{item.meal_price}
-              </p>
+              <div>
+                <p className="text-sm text-gray-600">
+                  Meals Price: {item.meal_price}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Meal Type: {item.meal_type}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Meal Time:
+                  {item.breakfast && (
+                    <p className="text-sm text-gray-600">Breakfast</p>
+                  )}
+                  {item.lunch && <p className="text-sm text-gray-600">Lunch</p>}
+                  {item.dinner && (
+                    <p className="text-sm text-gray-600">Dinner</p>
+                  )}
+                </p>
+              </div>
             )}
 
             <p className="text-sm text-gray-600 mb-1">

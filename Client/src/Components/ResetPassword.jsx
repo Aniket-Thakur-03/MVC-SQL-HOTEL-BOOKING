@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import CustomAlert from "./Notification/CustomAlert";
 const resetSchema = z.object({
-    password: z
+  password: z
     .string()
     .min(8, "Password must have at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -14,7 +14,7 @@ const resetSchema = z.object({
       /[@$!%*?&#]/,
       "Password must contain at least one special character (@$!%*?&#)"
     ),
-    repassword: z
+  repassword: z
     .string()
     .min(8, "Password must have at least 8 characters")
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
@@ -24,9 +24,10 @@ const resetSchema = z.object({
       /[@$!%*?&#]/,
       "Password must contain at least one special character (@$!%*?&#)"
     ),
-})
+});
 function ResetPassword() {
   const [status, setStatus] = useState("loading");
+  const navigate = useNavigate();
   const [message, setMessage] = useState("");
   const [password, setPassword] = useState("");
   const [repassword, setRepassword] = useState("");
@@ -37,7 +38,7 @@ function ResetPassword() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
-  const [alertCallback, setAlertCallback] = useState(null); 
+  const [alertCallback, setAlertCallback] = useState(null);
 
   const verifyUser = async (id) => {
     try {
@@ -97,7 +98,9 @@ function ResetPassword() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border rounded-md p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {typeof error ==="object" && error.password &&  <div className="text-red-500 text-sm mb-4">{error.password}</div>}
+          {typeof error === "object" && error.password && (
+            <div className="text-red-500 text-sm mb-4">{error.password}</div>
+          )}
           <label
             htmlFor="re_password"
             className="block text-gray-700 font-medium mb-2"
@@ -113,17 +116,20 @@ function ResetPassword() {
             onChange={(e) => setRepassword(e.target.value)}
             className="w-full border rounded-md p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          {typeof error ==="object" && error.repassword &&  <div className="text-red-500 text-sm mb-4">{error.repassword}</div>}
-          {(typeof error === "string"
-          ) && <div className="text-red-500 text-sm mb-4">{error}</div>}
+          {typeof error === "object" && error.repassword && (
+            <div className="text-red-500 text-sm mb-4">{error.repassword}</div>
+          )}
+          {typeof error === "string" && (
+            <div className="text-red-500 text-sm mb-4">{error}</div>
+          )}
           <button
             className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
             onClick={async (e) => {
               e.preventDefault();
-              if(password === repassword){
-                const formData = { password, repassword};
+              if (password === repassword) {
+                const formData = { password, repassword };
                 const validation = resetSchema.safeParse(formData);
-                if(validation.success){
+                if (validation.success) {
                   try {
                     setLoading(true);
                     const response = await axios.post(
@@ -134,22 +140,28 @@ function ResetPassword() {
                       }
                     );
                     if (response.status == 200) {
-                      triggerAlert("Password Reset successfully","success",() => navigate("/") )
+                      triggerAlert(
+                        "Password Reset successfully",
+                        "success",
+                        () => navigate("/")
+                      );
                     }
                   } catch (error) {
-                    setError(`${error.response?.data.message || error.message}`);
+                    setError(
+                      `${error.response?.data.message || error.message}`
+                    );
                   } finally {
                     setLoading(false);
                   }
-                }else{
-                  setError({password: fieldErrors.password?._errors[0],
-                    repassword: fieldErrors.repassword?._errors[0]
-                  })
+                } else {
+                  setError({
+                    password: fieldErrors.password?._errors[0],
+                    repassword: fieldErrors.repassword?._errors[0],
+                  });
                 }
-              }else{
-                setError("password and re-type password are not same")
+              } else {
+                setError("password and re-type password are not same");
               }
-             
             }}
           >
             Update Password
@@ -173,7 +185,8 @@ function ResetPassword() {
         <CustomAlert
           message={alertMessage}
           type={alertType}
-          onClose={() => {setShowAlert(false)
+          onClose={() => {
+            setShowAlert(false);
             if (alertCallback) alertCallback();
           }}
         />

@@ -16,6 +16,10 @@ function AllBookings() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [customReason, setCustomReason] = useState("");
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -35,12 +39,10 @@ function AllBookings() {
             },
           }
         );
-        // console.log(response.data);
         setData(response.data.bookings);
         setFilteredData(response.data.bookings);
         setErrors({});
       } catch (error) {
-        console.error("Api error:", error.message);
         setErrors({
           api: error.response?.data.message,
         });
@@ -54,11 +56,13 @@ function AllBookings() {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
+
   const triggerAlert = (message, type) => {
     setAlertMessage(message);
     setAlertType(type);
     setShowAlert(true);
   };
+
   useEffect(() => {
     const filtered = data.filter((item) => {
       const matchesBookingId = filters.bookingId
@@ -77,10 +81,57 @@ function AllBookings() {
     });
     setFilteredData(filtered);
   }, [filters, data]);
+
+  const openModal = (bookingId) => {
+    setSelectedBookingId(bookingId);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCancellationReason("");
+    setCustomReason("");
+    setSelectedBookingId(null);
+  };
+
+  const handleCancelBooking = async () => {
+    if (!cancellationReason) {
+      toast.error("Please select a cancellation reason.");
+      return;
+    }
+
+    const reason =
+      cancellationReason === "Other" ? customReason : cancellationReason;
+
+    try {
+      const response = await axios.patch(
+        `http://localhost:8000/api/booking/update/booking/cancel/${selectedBookingId}`,
+        { booking_status: "cancelled", cancellation_reason: reason },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setData((prevData) =>
+        prevData.map((booking) =>
+          booking.booking_id === selectedBookingId
+            ? { ...booking, booking_status: "cancelled" }
+            : booking
+        )
+      );
+      toast.success(`${response.data.message}`);
+      closeModal();
+    } catch (error) {
+      toast.error(`Error: ${error.response?.data.message || error.message}`);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex-grow container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-accent mb-6">Booking History</h1>
+        {/* Filter Inputs */}
         <div className="mb-4 flex flex-row items-center gap-2">
           <input
             type="text"
@@ -107,6 +158,7 @@ function AllBookings() {
             className="border px-3 py-2 rounded w-full"
           />
         </div>
+        {/* Bookings List */}
         {filteredData.length > 0 ? (
           filteredData.map((item) => (
             <div
@@ -119,15 +171,7 @@ function AllBookings() {
                   : "bg-white"
               }`}
             >
-              <h2
-                className={`font-semibold text-lg mb-2 ${
-                  item.booking_status === "cancelled"
-                    ? "text-red-600"
-                    : item.booking_status === "confirmed"
-                    ? "text-green-600"
-                    : "text-primary"
-                }`}
-              >
+              <h2 className="font-semibold text-lg mb-2 text-primary">
                 Booking ID: {item.booking_id}
               </h2>
               <p className="text-sm text-gray-600">
@@ -142,7 +186,6 @@ function AllBookings() {
                   {item.payment_status}
                 </span>
               </p>
-              <p className="text-sm text-gray-600">User Id: {item.user_id}</p>
               <p className="text-sm text-gray-600">
                 Guest Name: {item.guest_name}
               </p>
@@ -155,37 +198,30 @@ function AllBookings() {
                 {new Date(item.check_out_date).toLocaleDateString()}
               </p>
               <p className="text-sm text-gray-600">
-                Room Type: {item.Room.room_type} |Room Price: ₹{item.room_price}
+                Room Price: ₹{item.room_price}
               </p>
               {item.meal_chosen && (
-                <p className="text-sm text-gray-600">
-                  Meals Price: ₹{item.meal_price}
-                </p>
+                <div>
+                  <p className="text-sm text-gray-600">
+                    Meals Price: {item.meal_price}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Meal Type: {item.meal_type}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Meal Time:
+                    {item.breakfast && (
+                      <p className="text-sm text-gray-600">Breakfast</p>
+                    )}
+                    {item.lunch && (
+                      <p className="text-sm text-gray-600">Lunch</p>
+                    )}
+                    {item.dinner && (
+                      <p className="text-sm text-gray-600">Dinner</p>
+                    )}
+                  </p>
+                </div>
               )}
-
-              <p className="text-sm text-gray-600">
-                Booking Status: {item.booking_status}
-              </p>
-              <p
-                className={`text-sm font-semibold ${
-                  item.checked_status === "checked_out"
-                    ? "text-green-600"
-                    : "text-black" || item.checked_status === "not_checked"
-                    ? "text-red-600"
-                    : "text-black" || item.checked_status === "checked_in"
-                    ? "text-blue-600"
-                    : "text-black"
-                }`}
-              >
-                Checked Status:{" "}
-                {item.checked_status === "not_checked"
-                  ? `Not Checked`
-                  : item.checked_status === "checked_in"
-                  ? `Checked In`
-                  : item.checked_status === "checked_out"
-                  ? `Checked Out`
-                  : null}
-              </p>
               {item.special_requests && (
                 <p className="text-sm text-gray-600">
                   Special Requests: {item.special_requests}
@@ -196,37 +232,8 @@ function AllBookings() {
               </p>
               {item.booking_status === "pending" && (
                 <button
-                  className="px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    try {
-                      const response = await axios.patch(
-                        `http://localhost:8000/api/booking/update/booking/cancel/${item.booking_id}`,
-                        { booking_status: "cancelled" },
-                        {
-                          headers: {
-                            Authorization: `Bearer ${localStorage.getItem(
-                              "token"
-                            )}`,
-                          },
-                        }
-                      );
-                      setData((prevData) =>
-                        prevData.map((booking) =>
-                          booking.booking_id === item.booking_id
-                            ? { ...booking, booking_status: "cancelled" }
-                            : booking
-                        )
-                      );
-                      toast.success(`${response.data.message}`);
-                    } catch (error) {
-                      toast.error(
-                        `Error: ${
-                          error.response?.data.message || error.message
-                        }`
-                      );
-                    }
-                  }}
+                  className="px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded hover:bg-red-600"
+                  onClick={() => openModal(item.booking_id)}
                 >
                   Cancel Booking
                 </button>
@@ -259,9 +266,7 @@ function AllBookings() {
                         toast.success(`${response.data.message}`);
                       } catch (error) {
                         toast.error(
-                          `Error: ${
-                            error.response?.data.message || error.message
-                          }`
+                          `${error.response?.data.message || error.message}`
                         );
                       }
                     }}
@@ -274,20 +279,85 @@ function AllBookings() {
         ) : (
           <p className="text-gray-600">No matching records found.</p>
         )}
+        {/* Error Display */}
         {errors.api && <p className="text-red-500 mt-4">Error: {errors.api}</p>}
       </div>
+      {/* Toast Notifications */}
       <ToastContainer
         position="bottom-center"
         autoClose={3000}
         hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
         theme="colored"
       />
+      {/* Cancellation Reason Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4">Cancellation Reason</h2>
+            <div className="mb-4">
+              <label className="block mb-2">
+                <input
+                  type="radio"
+                  name="cancellationReason"
+                  value="Booking by mistake"
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                />
+                Booking by mistake
+              </label>
+              <label className="block mb-2">
+                <input
+                  type="radio"
+                  name="cancellationReason"
+                  value="Trip Cancelled"
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                />
+                Trip Cancelled
+              </label>
+              <label className="block mb-2">
+                <input
+                  type="radio"
+                  name="cancellationReason"
+                  value="Personal reasons"
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                />
+                Personal reasons
+              </label>
+              <label className="block">
+                <input
+                  type="radio"
+                  name="cancellationReason"
+                  value="Other"
+                  onChange={(e) => setCancellationReason(e.target.value)}
+                />
+                Other
+              </label>
+              {cancellationReason === "Other" && (
+                <input
+                  type="text"
+                  placeholder="Enter your reason"
+                  className="border px-3 py-2 rounded mt-2 w-full"
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                />
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-300 rounded hover:bg-gray-400"
+                onClick={closeModal}
+              >
+                Close
+              </button>
+              <button
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded hover:bg-red-600"
+                onClick={handleCancelBooking}
+              >
+                Confirm Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showAlert && (
         <CustomAlert
           message={alertMessage}

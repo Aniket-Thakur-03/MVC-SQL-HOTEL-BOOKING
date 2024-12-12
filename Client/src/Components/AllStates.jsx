@@ -138,7 +138,7 @@ export const AllStates = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">All States</h1>
+      <h1 className="text-2xl font-bold mb-4">All States and UTs</h1>
 
       {/* Country Selection Dropdown */}
       <select
