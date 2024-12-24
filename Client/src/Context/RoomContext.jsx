@@ -8,38 +8,61 @@ const RoomProvider = ({ children }) => {
   const [adults, setAdults] = useState(1);
   const [kids, setKids] = useState(0);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   // Function to fetch room data
-  const fetchRooms = async () => {
+  const handleSearchRooms = async ({
+    checkIn,
+    checkOut,
+    adults,
+    kids,
+    locationId,
+  }) => {
+    console.log("Fetching rooms with params:", {
+      checkIn,
+      checkOut,
+      adults,
+      kids,
+      locationId,
+    });
+    setLoading(true);
     try {
-      const response = await axios.get("http://localhost:8000/api/rooms");
-      const sortedRooms = response.data.rooms.sort(
-        (a, b) => a.room_id - b.room_id
-      );
-      const sRooms = sortedRooms.filter((room) => room.no_of_rooms !== 0);
-      setRooms(sRooms);
+      const response = await axios.post("http://localhost:8000/api/rooms", {
+        checkIn,
+        checkOut,
+        adults,
+        kids,
+        locationId,
+      });
+      if (response.status === 200) {
+        console.log("Rooms fetched successfully:", response.data);
+        setRooms(response.data.rooms);
+      } else {
+        console.error("Error fetching rooms");
+      }
     } catch (error) {
       console.error("Error fetching rooms:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     setTotal(kids + adults);
-    // Initial fetch of rooms
-    fetchRooms();
-    console.log(rooms);
-    // Polling every 10 seconds
-    // Clean up the interval when the component unmounts
   }, [adults, kids]);
-
-  const handleClick = () => {
-    const newRooms = rooms.filter((room) => room.max_adults >= adults);
-    setRooms(newRooms);
-  };
 
   return (
     <RoomContext.Provider
-      value={{ rooms, adults, setAdults, kids, setKids, handleClick, total }}
+      value={{
+        rooms,
+        adults,
+        setAdults,
+        kids,
+        setKids,
+        handleSearchRooms,
+        total,
+        loading,
+      }}
     >
       {children}
     </RoomContext.Provider>

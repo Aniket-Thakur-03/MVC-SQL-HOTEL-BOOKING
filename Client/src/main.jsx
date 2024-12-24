@@ -24,6 +24,18 @@ import CheckEmail from "./Components/CheckEmail.jsx";
 import UpdateProfile from "./Components/UpdateProfile.jsx";
 import ResetPassword from "./Components/ResetPassword.jsx";
 import ReviewBoooking from "./Components/ReviewBoooking.jsx";
+import { CreateUser } from "./Components/CreateUser.jsx";
+import { AdminControl } from "./Components/AdminControl.jsx";
+import { Locations } from "./Components/Location.jsx";
+import AllBookings from "./Components/AllBookings.jsx";
+import AllCheckins from "./Components/AllCheckins.jsx";
+import AllCheckouts from "./Components/AllCheckouts.jsx";
+import UpdatePayment from "./Components/UpdatePayment.jsx";
+// import UpdateRoom from "./Components/UpdateRoom.jsx";
+import { AllCountries } from "./Components/AllCountries.jsx";
+import { AllStates } from "./Components/AllStates.jsx";
+import { AllCities } from "./Components/AllCities.jsx";
+import { CreateEditRoom } from "./Components/CreateEditRoom.jsx";
 function getUserRole(token) {
   const decoded = jwtDecode(token);
   return decoded.role;
@@ -82,6 +94,19 @@ const router = createBrowserRouter([
             <AdminDashboard />
           </AdminRoute>
         ),
+        children: [
+          { path: "create-user", element: <CreateUser /> },
+          { path: "admin-control", element: <AdminControl /> },
+          { path: "location", element: <Locations /> },
+          { path: "all-bookings", element: <AllBookings /> },
+          { path: "check-ins", element: <AllCheckins /> },
+          { path: "check-outs", element: <AllCheckouts /> },
+          { path: "update-payment-status", element: <UpdatePayment /> },
+          { path: "update-rooms", element: <CreateEditRoom /> },
+          { path: "update-countries", element: <AllCountries /> },
+          { path: "update-states", element: <AllStates /> },
+          { path: "update-cities", element: <AllCities /> },
+        ],
       },
       {
         path: "unauthorized",

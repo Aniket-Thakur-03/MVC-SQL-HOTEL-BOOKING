@@ -1,10 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 import { User } from "../Models/user.model.js";
+import { Useradmin } from "../Models/useradmin.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { sendResetEmail, sendVerificationEmail } from "../utils/email.js";
-
+import sequelize from "../dbconnection.js";
 export const createUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -30,37 +31,65 @@ export const createUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
+  const transaction = await sequelize.transaction();
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email: email } });
+    const user = await User.findOne({
+      where: { email: email },
+      transaction: transaction,
+    });
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: "User not found! Please create account" });
+      throw new Error("User not found! Please create account");
     }
     if (!(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ message: "Incorrect Password" });
+      throw new Error("Incorrect Password");
     }
     if (!user.is_verified) {
-      return res
-        .status(400)
-        .json({ message: "Please verify your email first!" });
+      throw new Error("Please verify your email first!");
     }
-    const token = jwt.sign(
-      {
-        user_id: user.user_id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-      }
-    );
 
-    return res.status(200).json({ message: "Login Success", token: token });
+    const checkAdmin = await Useradmin.findOne({
+      where: { user_id: user.user_id },
+      transaction: transaction,
+    });
+    if (!checkAdmin) {
+      const token = jwt.sign(
+        {
+          user_id: user.user_id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+        }
+      );
+      await transaction.commit();
+      return res.status(200).json({ message: "Login Success", token: token });
+    } else if (checkAdmin && checkAdmin.isActive) {
+      const token = jwt.sign(
+        {
+          user_id: checkAdmin.user_id,
+          admin_id: checkAdmin.admin_id,
+          username: checkAdmin.admin_username,
+          email: checkAdmin.email,
+          role: user.role,
+          issuper: checkAdmin.issuper,
+          location_id: checkAdmin.location_id,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+        }
+      );
+      await transaction.commit();
+      return res.status(200).json({ message: "Login Success", token: token });
+    } else {
+      throw new Error("User not found");
+    }
   } catch (error) {
+    await transaction.rollback();
     console.error(error);
     return res.status(500).json({ message: "Server Error" });
   }
@@ -92,34 +121,69 @@ export const updateUserInfo = async (req, res) => {
       .status(400)
       .json({ message: "access unauthorized, id different" });
   }
+  const transaction = await sequelize.transaction();
   const { fullName, phoneNo, newusername, newpassword } = req.body;
   try {
-    const user = await User.findByPk(user_id);
+    const user = await User.findByPk(user_id, { transaction: transaction });
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      throw new Error("User not found");
     }
 
     if (newusername) user.username = newusername;
     if (newpassword) user.password = newpassword;
     if (fullName) user.full_name = fullName;
     if (phoneNo) user.phone_no = phoneNo;
-    const token = jwt.sign(
-      {
-        user_id: user_id,
-        username: newusername || user.username,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
-      }
-    );
-    await user.save();
-    return res
-      .status(200)
-      .json({ message: "User updated successfully", token: token });
+    await user.save({ transaction: transaction });
+    const checkAdmin = await Useradmin.findOne({
+      where: { user_id: user.user_id },
+      transaction: transaction,
+    });
+    if (!checkAdmin) {
+      const token = jwt.sign(
+        {
+          user_id: user_id,
+          username: newusername || user.username,
+          email: user.email,
+          role: user.role,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+        }
+      );
+      await transaction.commit();
+      return res
+        .status(200)
+        .json({ message: "User updated successfully", token: token });
+    } else {
+      const admin = await Useradmin.findByPk(checkAdmin.admin_id, {
+        transaction: transaction,
+      });
+      if (newusername) admin.admin_username = newusername;
+      if (newpassword) admin.password = user.password;
+      if (fullName) admin.full_name = fullName;
+      if (phoneNo) admin.phone_no = phoneNo;
+      await admin.save();
+      const token = jwt.sign(
+        {
+          user_id: user_id,
+          admin_id: admin.admin_id,
+          username: newusername || user.username,
+          email: user.email,
+          role: user.role,
+          issuper: admin.issuper,
+          location_id: admin.location_id,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+        }
+      );
+      await transaction.commit();
+      return res.status(200).json({ message: "User Updated", token: token });
+    }
   } catch (error) {
+    await transaction.rollback();
     console.error(error);
     return res
       .status(500)
@@ -220,6 +284,86 @@ export const sendInfo = async (req, res) => {
     return res.status(200).json({ user: user });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const createAdmin = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const { adminusername, fullname, email, password, phoneno } = req.body;
+    const { username } = req.user;
+    const newUser = await User.create(
+      {
+        username: adminusername,
+        full_name: fullname,
+        email: email,
+        password: password,
+        phone_no: phoneno,
+        role: "admin",
+        is_verified: true,
+        verification_token: null,
+      },
+      { transaction: transaction }
+    );
+
+    await Useradmin.create(
+      {
+        user_id: newUser.user_id,
+        full_name: fullname,
+        email: email,
+        admin_username: adminusername,
+        phoneno: phoneno,
+        password: newUser.password,
+        created_by: username,
+        updated_by: username,
+      },
+      { transaction: transaction }
+    );
+    await transaction.commit();
+    return res.status(200).json({ message: "Admin Created Successfully" });
+  } catch (error) {
+    await transaction.rollback();
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const showAdmins = async (req, res) => {
+  try {
+    const allAdmins = await Useradmin.findAll();
+    if (allAdmins.length === 0) {
+      return res.status(400).json({ message: "No Admins Exist" });
+    }
+    const filteredAdmins = allAdmins.filter(
+      (admin) => !admin.dataValues.issuper
+    );
+    return res.status(200).json({ admins: filteredAdmins });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const checkLocation = async (req, res) => {
+  try {
+    const { location_id, admin_id } = req.body;
+    const passCheck = await Useradmin.findByPk(Number(admin_id));
+    if (!passCheck) {
+      return res.status(400).json({ message: "No user exists" });
+    }
+    if (!passCheck.location_id) {
+      return res.status(400).json({
+        message: "No location assigned, please assign location first",
+      });
+    }
+    if (passCheck.location_id !== Number(location_id)) {
+      return res.status(400).json({ message: "Location not same" });
+    }
+    return res
+      .status(200)
+      .json({ message: "Admin is assigned to this location" });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };

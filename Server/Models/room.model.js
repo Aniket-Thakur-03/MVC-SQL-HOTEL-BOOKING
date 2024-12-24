@@ -18,14 +18,13 @@ const Room = sequelize.define(
         key: "roomtype_id",
       },
     },
-
-    max_adults: {
+    location_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    max_persons: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
+      references: {
+        model: "locations",
+        key: "location_id",
+      },
     },
     meals_available: {
       type: DataTypes.BOOLEAN,

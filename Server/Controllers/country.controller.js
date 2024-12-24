@@ -42,7 +42,10 @@ export const readCountry = async (req, res) => {
     if (countries.length === 0) {
       return res.status(204).json({ message: "No Countries added" });
     }
-    return res.status(200).json({ countries: countries });
+    const sortedCountries = countries.sort(
+      (a, b) => a.country_id - b.country_id
+    );
+    return res.status(200).json({ countries: sortedCountries });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });

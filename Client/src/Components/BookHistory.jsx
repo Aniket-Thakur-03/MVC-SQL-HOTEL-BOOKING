@@ -214,12 +214,13 @@ function BookHistory() {
                 Check-out Date:{" "}
                 {new Date(item.check_out_date).toLocaleDateString()}
               </p>
+              <p className="text-sm text-gray-600">Location: {item.location}</p>
               <p className="text-sm text-gray-600">
-                Room Price: ₹{item.Room.selling_price}
+                Room Price: ₹{item.room_price}
               </p>
               {item.meal_chosen && (
                 <p className="text-sm text-gray-600">
-                  Meals Price: {item.meal_price}
+                  Meals Price: ₹{item.meal_price}
                 </p>
               )}
               {item.special_requests && (

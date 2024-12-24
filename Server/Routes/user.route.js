@@ -1,11 +1,14 @@
 import { Router } from "express";
 import {
+  checkLocation,
+  createAdmin,
   createUser,
   loginUser,
   resetPassword,
   resetPasswordToken,
   sendforgetPassword,
   sendInfo,
+  showAdmins,
   updateUserInfo,
   verifyPassword,
   verifyUserEmail,
@@ -16,7 +19,7 @@ import {
   userUpdateCheck,
   verifypassword,
 } from "../Middleware/user.middleware.js";
-import { authenticateTokenUser } from "../Middleware/tokenverify.js";
+import { adminOnly, authenticateTokenUser } from "../Middleware/tokenverify.js";
 
 const userRouter = Router();
 
@@ -39,5 +42,11 @@ userRouter.patch(
   userUpdateCheck,
   updateUserInfo
 );
+
+//Admin Routes
+
+userRouter.post("/admin/register", adminOnly, createAdmin);
+userRouter.get("/admin/get", adminOnly, showAdmins);
+userRouter.post("/admin/check/location", adminOnly, checkLocation);
 
 export { userRouter };

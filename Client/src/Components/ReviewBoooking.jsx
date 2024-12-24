@@ -4,8 +4,11 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 function ReviewBooking() {
+  const navigate = useNavigate();
   const location = useLocation();
   const { bookingData, room, csc } = location.state;
   const {
@@ -13,8 +16,13 @@ function ReviewBooking() {
     veg_meals_price,
     non_veg_meals_price,
     meals_available,
+    location_id,
   } = room;
-
+  console.log(room);
+  function getUserRole(token) {
+    const decoded = jwtDecode(token);
+    return decoded.role;
+  }
   const [selectedMeals, setSelectedMeals] = useState({
     breakfast: false,
     lunch: false,
@@ -27,6 +35,7 @@ function ReviewBooking() {
   const [tax, setTax] = useState(0);
   const [noOfDays, setNoOfDays] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState("simple_user");
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
@@ -41,6 +50,9 @@ function ReviewBooking() {
     setAlertType(type);
     setShowAlert(true);
   };
+  useEffect(() => {
+    setRole(getUserRole(localStorage.getItem("token")));
+  }, []);
 
   useEffect(() => {
     const calculateNoOfDays = () => {
@@ -97,6 +109,7 @@ function ReviewBooking() {
             lunch: meals_available ? selectedMeals.lunch : false,
             dinner: meals_available ? selectedMeals.dinner : false,
             no_of_days: noOfDays,
+            location_id: location_id,
           },
         },
         {
@@ -105,9 +118,9 @@ function ReviewBooking() {
           },
         }
       );
-      if (response.status === 201) {
+      if (response.status === 200) {
         toast.success(`${response.data.message}`);
-        setTimeout(() => (window.location.href = "/"), 3000);
+        setTimeout(() => navigate("/", { replace: true }), 2000);
       }
     } catch (error) {
       console.error("Booking failed", error);
@@ -135,6 +148,10 @@ function ReviewBooking() {
           </p>
           <p>
             <strong>Phone No:</strong> {bookingData.guest_phone_no}
+          </p>
+          <p>
+            <strong>Hotel Location:</strong>{" "}
+            {`${csc.locationRoom.location_name} -${csc.locationRoom.city}`}
           </p>
           <p>
             <strong>Country:</strong> {csc.country}
@@ -283,13 +300,19 @@ function ReviewBooking() {
         </p>
       </div>
 
-      {/* Confirm Button */}
-      <button
-        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-        onClick={handleSubmit}
-      >
-        Confirm Booking
-      </button>
+      {role === "simple_user" ? (
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+          onClick={handleSubmit}
+        >
+          Confirm Booking
+        </button>
+      ) : (
+        <div className="text-red-500 text-center">
+          {" "}
+          Admins Not allowed to book
+        </div>
+      )}
       {loading && (
         <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
           <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>

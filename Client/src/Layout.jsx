@@ -3,6 +3,7 @@ import Footer from "./Components/Footer";
 import Header from "./Components/Header";
 import "./index.css";
 import RoomProvider from "./Context/RoomContext";
+
 function Layout() {
   const location = useLocation();
   const hideHeaderFooter =
@@ -13,11 +14,16 @@ function Layout() {
     location.pathname === "/update/profile" ||
     location.pathname.startsWith("/forget/password") ||
     location.pathname === "/verifyemail";
+
   return (
     <RoomProvider>
-      {!hideHeaderFooter && <Header />}
-      <Outlet />
-      {!hideHeaderFooter && <Footer />}
+      <div className="flex flex-col min-h-screen overflow-x-hidden">
+        {!hideHeaderFooter && <Header />}
+        <div className="flex-1">
+          <Outlet />
+        </div>
+        {!hideHeaderFooter && <Footer />}
+      </div>
     </RoomProvider>
   );
 }

@@ -1,29 +1,44 @@
-import sequelize from "../dbconnection.js";
 import { DataTypes } from "sequelize";
-import { Room } from "./room.model.js";
+import sequelize from "../dbconnection.js";
 
-const Roomtype = sequelize.define(
-  "Roomtype",
+const Location = sequelize.define(
+  "Location",
   {
-    roomtype_id: {
+    location_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
     },
-    room_name: {
+    location_name: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    max_adults: {
-      type: DataTypes.INTEGER,
+    address: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
-    max_persons: {
-      type: DataTypes.INTEGER,
+    country: {
+      type: DataTypes.STRING,
       allowNull: false,
     },
-    isactive: {
+    state: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    city: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    pincode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    phoneno: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    isActive: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
@@ -38,15 +53,12 @@ const Roomtype = sequelize.define(
     },
   },
   {
-    tableName: "roomtypes",
-    schema: "hotel_booking",
+    tableName: "locations",
     timestamps: true,
+    schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
   }
 );
 
-Room.hasOne(Roomtype, { foreignKey: "roomtype_id" });
-Roomtype.belongsTo(Room, { foreignKey: "roomtype_id" });
-
-export { Roomtype };
+export { Location };

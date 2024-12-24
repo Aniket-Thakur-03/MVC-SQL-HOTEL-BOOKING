@@ -1,7 +1,9 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import CustomAlert from "./Notification/CustomAlert";
-import { Logs } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
+import { Roomtype } from "./Roomtype";
 
 function UpdateRoom() {
   const [error, setError] = useState("");
@@ -13,6 +15,10 @@ function UpdateRoom() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
   const [loading, setLoading] = useState(false);
+  const locationId = jwtDecode(localStorage.getItem("token")).location_id;
+  const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
+  const issuper = jwtDecode(localStorage.getItem("token")).issuper;
+  const navigate = useNavigate();
 
   const initialFormState = {
     room_id: "",
@@ -46,25 +52,66 @@ function UpdateRoom() {
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:8000/api/rooms/get", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await axios.get(
+        "http://localhost:8000/api/rooms/get/all/rooms/admin",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
       if (response.status === 200) {
         setRooms(response.data.rooms);
         setError("");
+      } else {
+        setRooms([]);
       }
     } catch (err) {
       setError(`${error.response?.data.message || error.message}`);
       triggerAlert(`${error.response?.data.message || error.message}`, "error");
+      setRooms([]);
     } finally {
       setLoading(false);
     }
   };
+  const fetchAccess = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/preference/search/feature/access/v1/admin",
+        {
+          feature_id: 5,
+          admin_id: adminId,
+          location_id: locationId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
+      if (response.status === 200) {
+        console.log("Access granted");
+      } else {
+        navigate("/unauthorized", { replace: true });
+      }
+    } catch (error) {
+      if (error.response) {
+        // Handle specific status codes
+        if (error.response.status === 403) {
+          console.log("Unauthorized access");
+        } else if (error.response.status === 404) {
+          console.log("Preference not found");
+        }
+      } else {
+        console.error("Network or server error");
+      }
+      navigate("/unauthorized", { replace: true });
+    }
+  };
   useEffect(() => {
     fetchRooms();
+    fetchAccess();
   }, []);
 
   const handleEdit = (room) => {
@@ -158,7 +205,7 @@ function UpdateRoom() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Manage Rooms</h1>
+      {issuper ? <Roomtype /> : null}
       <button
         onClick={() => {
           setIsAdding(true);
@@ -171,7 +218,7 @@ function UpdateRoom() {
       <div className="overflow-x-auto">
         <table className="table-auto w-full border-collapse border border-gray-200">
           <thead>
-            <tr className="bg-gray-100">
+            <tr className="bg-gray-200">
               <th className="border border-gray-300 px-4 py-2">Room ID</th>
               <th className="border border-gray-300 px-4 py-2">Room Name</th>
               <th className="border border-gray-300 px-4 py-2">Retail Price</th>
@@ -201,7 +248,7 @@ function UpdateRoom() {
                   {room.room_id}
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
-                  {room.Roomtype.room_name}
+                  {room.room_name}
                 </td>
                 <td className="border border-gray-300 px-4 py-2 text-center">
                   ₹{room.retail_price}

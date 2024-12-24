@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import CustomAlert from "./Notification/CustomAlert";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
 export const AllStates = () => {
+  const navigate = useNavigate();
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [selectedCountryId, setSelectedCountryId] = useState(null);
@@ -15,6 +18,8 @@ export const AllStates = () => {
     state_name: "",
     isActive: false,
   });
+  const locationId = jwtDecode(localStorage.getItem("token")).location_id;
+  const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
   const [editStateId, setEditStateId] = useState(null);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -79,6 +84,29 @@ export const AllStates = () => {
 
   useEffect(() => {
     fetchCountries();
+    (async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/api/preference/search/feature/access/v1/admin",
+          {
+            feature_id: 7,
+            admin_id: adminId,
+            location_id: locationId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (response.status == 200) {
+          return;
+        }
+      } catch (error) {
+        navigate("/unauthorized", { replace: true });
+        return;
+      }
+    })();
   }, []);
 
   // Handle input change for form

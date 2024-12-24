@@ -190,6 +190,14 @@ const Booking = sequelize.define(
       type: DataTypes.TEXT,
       defaultValue: null,
     },
+    location_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "locations",
+        key: "location_id",
+      },
+    },
   },
   {
     timestamps: true,

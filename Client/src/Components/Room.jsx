@@ -1,4 +1,3 @@
-import axios from "axios";
 import { User, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -7,7 +6,7 @@ const Room = ({ room }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const {
     room_id,
-    Roomtype,
+    room_name,
     image_link,
     no_of_rooms,
     max_adults,
@@ -16,6 +15,7 @@ const Room = ({ room }) => {
     retail_price,
     selling_price,
   } = room;
+
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
@@ -60,7 +60,7 @@ const Room = ({ room }) => {
         </div>
       </div>
       <div className="text-center">
-        <h3 className="h3">{Roomtype.room_name}</h3>
+        <h3 className="h3">{room_name}</h3>
         <h4 className="h4">Rooms Avaiable:{no_of_rooms}</h4>
         <p className="max-w-[300px] mx-auto mb-3 lg:mb-6">
           Lorem ipsum dolor sit amet consectetur adipisicing elit.

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import CustomAlert from "./Notification/CustomAlert";
-
+import { jwtDecode } from "jwt-decode";
 function UpdatePayment() {
+  const navigate = useNavigate();
   const [id, setId] = useState(0);
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
@@ -10,6 +12,8 @@ function UpdatePayment() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
+  const locationId = jwtDecode(localStorage.getItem("token")).location_id;
+  const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
   useEffect(() => {
     if (!localStorage.getItem("token")) {
       alert("Please log in");
@@ -28,6 +32,29 @@ function UpdatePayment() {
       localStorage.removeItem("token");
       window.location.href = "/";
     }
+    (async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/api/preference/search/feature/access/v1/admin",
+          {
+            feature_id: 4,
+            admin_id: adminId,
+            location_id: locationId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (response.status == 200) {
+          return;
+        }
+      } catch (error) {
+        navigate("/unauthorized", { replace: true });
+        return;
+      }
+    })();
   }, [error]);
 
   const handleSubmit = async (e) => {

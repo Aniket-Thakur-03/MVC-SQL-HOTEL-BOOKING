@@ -77,7 +77,29 @@ function RoomDetails() {
   const [selectedCountryId, setSelectedCountryId] = useState(null);
   const [selectedStateId, setSelectedStateId] = useState(null);
   const [selectedCityId, setSelectedCityId] = useState(null);
-
+  const [locationRoom, setLocationRoom] = useState({});
+  async function fetchLocationRoom(location) {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:8000/api/location/get/${location}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status == 200) {
+        setLocationRoom(response.data.location);
+      } else {
+        setLocationRoom({});
+      }
+    } catch (error) {
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
   async function fetchStates(countryId) {
     try {
       setLoading(true);
@@ -127,14 +149,17 @@ function RoomDetails() {
   const room = rooms.find((room) => room.room_id === Number(id));
 
   const {
-    Roomtype,
+    room_name,
     max_persons,
     max_adults,
     selling_price,
     room_id,
     big_image_link,
+    location_id,
   } = room;
-
+  useEffect(() => {
+    fetchLocationRoom(location_id);
+  }, []);
   const bookSchema = z.object({
     guestName: z
       .string()
@@ -207,6 +232,7 @@ function RoomDetails() {
             country: selectedCountryName,
             state: selectedStateName,
             city: selectedCityName,
+            locationRoom: locationRoom,
           },
         },
       });
@@ -228,14 +254,20 @@ function RoomDetails() {
         <section>
           <div className="bg-room bg-cover bg-center h-[560px] relative flex justify-center items-center">
             <div className="absolute w-full h-full bg-black/70"></div>
+
             <h1 className="text-6xl text-white z-20 font-primary text-center">
-              {Roomtype.room_name} Details
+              {room_name} Details
             </h1>
           </div>
           <div className="container mx-auto">
             <div className="flex flex-col lg:flex-row h-full py-24">
               <div className="w-full h-full lg:w-[60%] px-6">
-                <h2 className="h2">{Roomtype.room_name}</h2>
+                {locationRoom ? (
+                  <h1 className="text-3xl text-primary z-20 font-primary text-left">
+                    {`Location: ${locationRoom.location_name} -${locationRoom.city} -${locationRoom.pincode}`}
+                  </h1>
+                ) : null}
+                <h2 className="h2">{room_name}</h2>
                 <p className="mb-8">
                   Lorem ipsum dolor sit amet consectetur adipisicing elit.Ea
                   placeat eos sed voluptas unde veniam eligendi a. Quaerat

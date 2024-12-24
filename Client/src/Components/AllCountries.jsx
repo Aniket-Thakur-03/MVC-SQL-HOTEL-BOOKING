@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 export const AllCountries = () => {
   const [countries, setCountries] = useState([]);
   const [errors, setErrors] = useState("");
@@ -12,6 +13,9 @@ export const AllCountries = () => {
     isActive: false,
   });
   const [editCountryId, setEditCountryId] = useState(null);
+  const locationId = jwtDecode(localStorage.getItem("token")).location_id;
+  const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
+  const navigate = useNavigate();
 
   // Fetch countries
   async function fetchCountries() {
@@ -37,6 +41,29 @@ export const AllCountries = () => {
 
   useEffect(() => {
     fetchCountries();
+    (async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/api/preference/search/feature/access/v1/admin",
+          {
+            feature_id: 6,
+            admin_id: adminId,
+            location_id: locationId,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (response.status == 200) {
+          return;
+        }
+      } catch (error) {
+        navigate("/unauthorized", { replace: true });
+        return;
+      }
+    })();
   }, []);
 
   // Handle input change for form

@@ -1,29 +1,40 @@
-import sequelize from "../dbconnection.js";
 import { DataTypes } from "sequelize";
-import { Room } from "./room.model.js";
+import sequelize from "../dbconnection.js";
 
-const Roomtype = sequelize.define(
-  "Roomtype",
+const AdminPreference = sequelize.define(
+  "AdminPreference",
   {
-    roomtype_id: {
+    preference_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
       autoIncrement: true,
       primaryKey: true,
     },
-    room_name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    max_adults: {
+    admin_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "useradmins",
+        key: "admin_id",
+      },
     },
-    max_persons: {
+    location_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      references: {
+        model: "locations",
+        key: "location_id",
+      },
     },
-    isactive: {
+    feature_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "features",
+        key: "feature_id",
+      },
+    },
+    isgranted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
@@ -38,7 +49,7 @@ const Roomtype = sequelize.define(
     },
   },
   {
-    tableName: "roomtypes",
+    tableName: "adminpreferences",
     schema: "hotel_booking",
     timestamps: true,
     createdAt: "created_at",
@@ -46,7 +57,4 @@ const Roomtype = sequelize.define(
   }
 );
 
-Room.hasOne(Roomtype, { foreignKey: "roomtype_id" });
-Roomtype.belongsTo(Room, { foreignKey: "roomtype_id" });
-
-export { Roomtype };
+export { AdminPreference };
