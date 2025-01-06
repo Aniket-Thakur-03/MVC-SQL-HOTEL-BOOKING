@@ -7,7 +7,7 @@ const Room = ({ room }) => {
   const {
     room_id,
     room_name,
-    image_link,
+    image_link_1,
     no_of_rooms,
     max_adults,
     meals_available,
@@ -35,7 +35,7 @@ const Room = ({ room }) => {
       <div className="overfolw-hidden">
         <img
           className="group-hover:scale-110 transition-all duration-300 w-full"
-          src={`http://localhost:8000${image_link}`}
+          src={`http://localhost:8000${image_link_1}`}
           alt=""
         />
       </div>
@@ -68,7 +68,6 @@ const Room = ({ room }) => {
       </div>
 
       <div>
-        {isLoggedIn ? (
           <Link
             to={`/room/${room_id}`}
             className="btn btn-secondary btn-sm max-w-[240px] mx-auto"
@@ -83,22 +82,6 @@ const Room = ({ room }) => {
               <div>₹{selling_price}</div>
             )}
           </Link>
-        ) : (
-          <p
-            onClick={() => triggerAlert("Please Login to book!", "error")}
-            className="cursor-not-allowed btn btn-secondary btn-sm max-w-[240px] mx-auto"
-          >
-            {selling_price !== retail_price ? (
-              <div>
-                ₹{selling_price}
-                {"  "}
-                <span className="mx-2 line-through">₹{retail_price}</span>
-              </div>
-            ) : (
-              <div>₹{selling_price}</div>
-            )}
-          </p>
-        )}
       </div>
       <div
         className={`text-center text-base ${

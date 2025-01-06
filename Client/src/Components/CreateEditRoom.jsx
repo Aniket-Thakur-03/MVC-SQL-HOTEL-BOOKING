@@ -38,8 +38,12 @@ export const CreateEditRoom = () => {
     no_of_rooms: "",
     meals_available: true,
     state: "inactive",
-    room_image_small: null,
-    room_image_large: null,
+    room_image_1: null,
+    room_image_2: null,
+    room_image_3: null,
+    room_image_4: null,
+    room_image_5: null,
+    room_image_6: null,
   };
   const handleFormSubmit = async (formData) => {
     try {

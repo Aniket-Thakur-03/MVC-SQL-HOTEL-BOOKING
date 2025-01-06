@@ -162,10 +162,6 @@ export const editPreferences = async (req, res) => {
       throw new Error("User not found");
     }
 
-    if (editData.newlocationId) {
-      console.log("Updating location ID...");
-      checkUser.location_id = Number(editData.newlocationId);
-    }
     checkUser.isActive = editData.isActive;
 
     console.log("Saving user...");
@@ -180,21 +176,15 @@ export const editPreferences = async (req, res) => {
       transaction: transaction,
     });
 
-    if (!checkPreference.length) {
-      return res.status(404).json({
-        message: "No preferences found for the provided admin and location.",
-      });
-    }
-
     console.log("Preferences fetched:", checkPreference);
 
+    // Update existing preferences
     await Promise.all(
       checkPreference.map(async (prefer) => {
         try {
           const updatedPreference = editData.preference.find(
             (prefert) => prefert.feature_id === prefer.feature_id
           );
-
           if (updatedPreference) {
             console.log("Updating preference:", prefer.feature_id);
             prefer.set({
@@ -209,6 +199,39 @@ export const editPreferences = async (req, res) => {
           }
         } catch (err) {
           console.error("Error updating preference:", err);
+        }
+      })
+    );
+
+    // Create new preferences for missing feature_ids
+    const existingFeatureIds = checkPreference.map(
+      (prefer) => prefer.feature_id
+    );
+    const newPreferences = editData.preference.filter(
+      (prefert) => !existingFeatureIds.includes(prefert.feature_id)
+    );
+
+    console.log("New preferences to create:", newPreferences);
+
+    await Promise.all(
+      newPreferences.map(async (newPref) => {
+        try {
+          console.log("Creating new preference:", newPref.feature_id);
+          await AdminPreference.create(
+            {
+              admin_id: Number(editData.adminId),
+              location_id:
+                Number(editData.newlocationId) || Number(editData.locationId),
+              feature_id: newPref.feature_id,
+              isgranted: newPref.isgranted,
+              created_by: username,
+              updated_by: username,
+            },
+            { transaction: transaction }
+          );
+          console.log("New preference created:", newPref.feature_id);
+        } catch (err) {
+          console.error("Error creating new preference:", err);
         }
       })
     );
@@ -248,6 +271,36 @@ export const seeAdminFeatures = async (req, res) => {
     });
 
     return res.status(200).json({ features });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const addSuperAdminPreference = async (req, res) => {
+  try {
+    const { issuper, username, admin_id } = req.user;
+    const { id } = req.params;
+    if (!issuper) {
+      return res.status(400).json({ message: "unauthorized" });
+    } else {
+      const checkFeature = await Feature.findByPk(Number(id));
+      if (!checkFeature)
+        return res.status(400).json({ message: "Feature does not exist" });
+      const checkPreference = await AdminPreference.findOne({
+        where: { feature_id: Number(id), admin_id: Number(admin_id) },
+      });
+      if (checkPreference)
+        return res.status(400).json({ message: "Already registered" });
+      await AdminPreference.create({
+        feature_id: Number(id),
+        admin_id: Number(admin_id),
+        isgranted: true,
+        created_by: username,
+        updated_by: username,
+      });
+      return res.status(200).json({ message: "new feature preference added" });
+    }
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });

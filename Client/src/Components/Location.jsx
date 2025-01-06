@@ -322,18 +322,20 @@ function Locations() {
                   className="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-500"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Active:
-                </label>
-                <input
-                  type="checkbox"
-                  name="isActive"
-                  checked={formValues.isActive}
-                  onChange={handleInputChange}
-                  className="h-5 w-5"
-                />
-              </div>
+              {isEditing && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Active:
+                  </label>
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={formValues.isActive}
+                    onChange={handleInputChange}
+                    className="h-5 w-5"
+                  />
+                </div>
+              )}
             </form>
             <div className="mt-6 flex justify-end gap-4">
               <button

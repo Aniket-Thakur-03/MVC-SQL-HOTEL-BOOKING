@@ -11,6 +11,8 @@ import { featureRouter } from "./Routes/feature.route.js";
 import { preferenceRouter } from "./Routes/preference.route.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import { extraRouter } from "./Routes/extraservice.route.js";
+import { invoiceRouter } from "./Routes/invoice.route.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
@@ -41,5 +43,7 @@ app.use("/api/city", cityRouter);
 app.use("/api/location", locationRouter);
 app.use("/api/feature", featureRouter);
 app.use("/api/preference", preferenceRouter);
+app.use("/api/extra", extraRouter);
+app.use("/api/invoices", invoiceRouter);
 
 export default app;

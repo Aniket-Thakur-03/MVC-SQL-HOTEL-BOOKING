@@ -174,30 +174,21 @@ const RoomForm = ({
 
           {/* Room Images */}
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Small Room Image
-              </label>
-              <input
-                type="file"
-                name="room_image_small"
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded focus:outline-none focus:border-blue-500"
-                accept="image/*"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Large Room Image
-              </label>
-              <input
-                type="file"
-                name="room_image_large"
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded focus:outline-none focus:border-blue-500"
-                accept="image/*"
-              />
-            </div>
+            {[1, 2, 3, 4, 5, 6].map((num) => (
+              <div key={num}>
+                <label className="block text-sm font-medium mb-1">
+                  Room Image {num}
+                </label>
+                <input
+                  type="file"
+                  name={`room_image_${num}`}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded focus:outline-none focus:border-blue-500"
+                  accept="image/*"
+                  required={!isEditing}
+                />
+              </div>
+            ))}
           </div>
 
           {/* State Radio Buttons */}

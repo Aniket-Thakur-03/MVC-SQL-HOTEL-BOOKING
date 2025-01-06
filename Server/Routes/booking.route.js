@@ -1,6 +1,8 @@
 import { Router } from "express";
 import {
   createBooking,
+  editBooking,
+  getAllBookingHistory,
   getAllBookings,
   getAllBookingsCheckIns,
   getAllBookingsCheckInsSuper,
@@ -31,6 +33,11 @@ bookingRouter.get(
 );
 bookingRouter.get("/details/all/booking/:id", adminOnly, getAllBookings);
 bookingRouter.get(
+  "/details/all/history/booking/:id",
+  adminOnly,
+  getAllBookingHistory
+);
+bookingRouter.get(
   "/details/all/super/admin/booking/:id",
   adminOnly,
   getAllBookingsSuper
@@ -59,5 +66,7 @@ bookingRouter.patch(
   updateCancelBookingStatus
 );
 bookingRouter.patch("/update/checked/:id", adminOnly, updateCheckedStatus);
+
+bookingRouter.patch("/edit/add/services", adminOnly, editBooking);
 
 export { bookingRouter };

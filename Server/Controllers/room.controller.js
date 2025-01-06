@@ -3,17 +3,17 @@ import { Room } from "../Models/room.model.js";
 import { Roomtype } from "../Models/roomtype.model.js";
 
 export const createRoom = async (req, res) => {
-  if (
-    !req.files ||
-    !req.files["room_image_small"] ||
-    !req.files["room_image_large"]
-  ) {
-    return res.status(400).json({ message: "Both images must be uploaded." });
+  // Check if all six images are uploaded
+  if (!req.files || Object.keys(req.files).length !== 6) {
+    return res.status(400).json({ message: "All six images must be uploaded." });
   }
-  const filePaths = [
-    `/uploads/${req.files["room_image_small"][0].filename}`,
-    `/uploads/${req.files["room_image_large"][0].filename}`,
-  ];
+
+  // Create array of file paths for all six images
+  const filePaths = Array.from({ length: 6 }, (_, i) => {
+    const imageKey = `room_image_${i + 1}`;
+    return `/uploads/${req.files[imageKey][0].filename}`;
+  });
+
   const {
     roomtype_id,
     location_id,
@@ -24,15 +24,7 @@ export const createRoom = async (req, res) => {
     no_of_rooms,
   } = req.body;
   const { username } = req.user;
-  console.log(
-    roomtype_id,
-    location_id,
-    veg_meals_price,
-    non_veg_meals_price,
-    retail_price,
-    selling_price,
-    no_of_rooms
-  );
+
   const transaction = await sequelize.transaction();
   try {
     const newRoom = await Room.create(
@@ -44,8 +36,12 @@ export const createRoom = async (req, res) => {
         retail_price: Number(retail_price),
         selling_price: Number(selling_price),
         no_of_rooms: Number(no_of_rooms),
-        image_link: filePaths[0],
-        big_image_link: filePaths[1],
+        image_link_1: filePaths[0],
+        image_link_2: filePaths[1],
+        image_link_3: filePaths[2],
+        image_link_4: filePaths[3],
+        image_link_5: filePaths[4],
+        image_link_6: filePaths[5],
         created_by: username,
         updated_by: username,
       },
@@ -120,13 +116,15 @@ export const roomfindAdmin = async (req, res) => {
 // };
 
 export const updateRoom = async (req, res) => {
-  const filePaths = [];
-  if (req.files["room_image_small"]) {
-    filePaths.push(`/uploads/${req.files["room_image_small"][0].filename}`);
+  const filePaths = {};
+  // Check for each image and add to filePaths if present
+  for (let i = 1; i <= 6; i++) {
+    const fieldName = `room_image_${i}`;
+    if (req.files[fieldName]) {
+      filePaths[fieldName] = `/uploads/${req.files[fieldName][0].filename}`;
+    }
   }
-  if (req.files["room_image_large"]) {
-    filePaths.push(`/uploads/${req.files["room_image_large"][0].filename}`);
-  }
+
   const transaction = await sequelize.transaction();
   try {
     const { id } = req.params;
@@ -144,18 +142,43 @@ export const updateRoom = async (req, res) => {
     } = req.body;
 
     const room = await Room.findByPk(Number(id), { transaction: transaction });
-    if (roomtype_id) room.roomtype_id = Number(roomtype_id);
-    if (location_id) room.location_id = Number(location_id);
+
+    if (room.roomtype_id != Number(roomtype_id)) {
+      const checkRoomtype = await Roomtype.findByPk(Number(roomtype_id), {
+        transaction: transaction,
+      });
+      if (checkRoomtype.isactive == false) {
+        throw new Error("Selected Roomtype inactive");
+      }
+      room.roomtype_id = Number(roomtype_id);
+    }
+
+    // Update basic fields if provided
     if (veg_meals_price) room.veg_meals_price = Number(veg_meals_price);
-    if (non_veg_meals_price)
-      room.non_veg_meals_price = Number(non_veg_meals_price);
+    if (non_veg_meals_price) room.non_veg_meals_price = Number(non_veg_meals_price);
     room.meals_available = meals_available;
     if (retail_price) room.retail_price = Number(retail_price);
     if (selling_price) room.selling_price = Number(selling_price);
     if (no_of_rooms) room.no_of_rooms = Number(no_of_rooms);
-    if (state) room.state = state;
-    if (req.files["room_image_small"]) room.image_link = filePaths[0];
-    if (req.files["room_image_large"]) room.big_image_link = filePaths[1];
+
+    // Handle state change
+    if (state == "active") {
+      const checkRoomtype = await Roomtype.findByPk(room.roomtype_id);
+      if (checkRoomtype.isactive === false) {
+        throw new Error("Roomtype not active ");
+      } else {
+        room.state = state;
+      }
+    }
+
+    // Update images if provided
+    if (filePaths.room_image_1) {room.image_link_1 = filePaths.room_image_1;}
+    if (filePaths.room_image_2) {room.image_link_2 = filePaths.room_image_2;}
+    if (filePaths.room_image_3) {room.image_link_3 = filePaths.room_image_3;}
+    if (filePaths.room_image_4) {room.image_link_4 = filePaths.room_image_4;}
+    if (filePaths.room_image_5) {room.image_link_5 = filePaths.room_image_5;}
+    if (filePaths.room_image_6) {room.image_link_6 = filePaths.room_image_6;}
+
     room.updated_by = username;
     await room.save({ transaction: transaction });
     await transaction.commit();
@@ -187,8 +210,12 @@ export const getRoomsLocations = async (req, res) => {
           veg_meals_price: room.veg_meals_price,
           non_veg_meals_price: room.non_veg_meals_price,
           no_of_rooms: room.no_of_rooms,
-          image_link: room.image_link,
-          big_image_link: room.big_image_link,
+          image_link_1: room.image_link_1,
+          image_link_2: room.image_link_2,
+          image_link_3: room.image_link_3,
+          image_link_4: room.image_link_4,
+          image_link_5: room.image_link_5,
+          image_link_6: room.image_link_6,
           location_id: room.location_id,
         };
         const roomtype = await Roomtype.findByPk(Number(room.roomtype_id), {
@@ -376,3 +403,16 @@ export const showRoomsWithTypes = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const singleRoomDetails = async (req,res) => {
+  try {
+    const room = await Room.findByPk(Number(req.params.id));
+    return res.status(200).json({room:{
+      veg_meals_price:room.veg_meals_price,
+      non_veg_meals_price:room.non_veg_meals_price,
+  }})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({message:error.message})
+  }
+}

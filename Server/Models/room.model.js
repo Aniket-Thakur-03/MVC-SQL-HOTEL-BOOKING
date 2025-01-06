@@ -88,11 +88,27 @@ const Room = sequelize.define(
         },
       },
     },
-    image_link: {
+    image_link_1: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    big_image_link: {
+    image_link_2: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    image_link_3: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    image_link_4: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    image_link_5: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    image_link_6: {
       type: DataTypes.STRING,
       allowNull: false,
     },

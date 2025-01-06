@@ -36,6 +36,9 @@ import { AllCountries } from "./Components/AllCountries.jsx";
 import { AllStates } from "./Components/AllStates.jsx";
 import { AllCities } from "./Components/AllCities.jsx";
 import { CreateEditRoom } from "./Components/CreateEditRoom.jsx";
+import HistoryBook from "./Components/HistoryBook.jsx";
+import { ExtraServices } from "./Components/ExtraServices.jsx";
+import { ViewInvoices } from "./Components/ViewInvoices.jsx";
 function getUserRole(token) {
   const decoded = jwtDecode(token);
   return decoded.role;
@@ -106,6 +109,9 @@ const router = createBrowserRouter([
           { path: "update-countries", element: <AllCountries /> },
           { path: "update-states", element: <AllStates /> },
           { path: "update-cities", element: <AllCities /> },
+          { path: "book-history", element: <HistoryBook /> },
+          { path: "extra-services", element: <ExtraServices /> },
+          { path: "view-invoices", element: <ViewInvoices /> },
         ],
       },
       {

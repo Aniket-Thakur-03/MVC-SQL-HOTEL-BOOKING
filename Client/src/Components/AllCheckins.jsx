@@ -13,6 +13,7 @@ function AllCheckins() {
   const locationId = jwtDecode(localStorage.getItem("token")).location_id;
   const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
   const issuper = jwtDecode(localStorage.getItem("token")).issuper;
+  const [loading, setLoading] = useState(false);
   const [showbookings, setShowbookings] = useState(true);
   const [selectLocationId, setSelectLocationId] = useState(null);
   const [locations, setLocations] = useState([]);
@@ -27,6 +28,7 @@ function AllCheckins() {
 
   async function fetchLocations() {
     try {
+      setLoading(true);
       const response = await axios.get(
         "http://localhost:8000/api/location/get/admin/location",
         {
@@ -40,11 +42,14 @@ function AllCheckins() {
       }
     } catch (error) {
       triggerAlert(`${error.response?.data.message || error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   }
   const fetchCheckins = async (location) => {
     const today = new Date();
     try {
+      setLoading(true);
       const response = await axios.get(
         `http://localhost:8000/api/booking/details/${
           issuper ? location : location_id
@@ -66,6 +71,8 @@ function AllCheckins() {
       console.error("Error fetching booking details:", error);
       setError(`${error.response?.data.message || error.message}`);
       triggerAlert(`${error.response?.data.message || error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
   const handleFilter = () => {
@@ -81,6 +88,7 @@ function AllCheckins() {
 
   const handleConfirmBooking = async (id) => {
     try {
+      setLoading(true);
       const response = await axios.patch(
         `http://localhost:8000/api/booking/update/booking/confirm/${id}`,
         { booking_status: "confirmed", checked_status: "checked_in" },
@@ -105,12 +113,15 @@ function AllCheckins() {
       }
     } catch (error) {
       triggerAlert(`${error.response?.data.message || error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     (async () => {
       try {
+        setLoading(true);
         const response = await axios.post(
           "http://localhost:8000/api/preference/search/feature/access/v1/admin",
           {
@@ -130,6 +141,8 @@ function AllCheckins() {
       } catch (error) {
         navigate("/unauthorized", { replace: true });
         return;
+      } finally {
+        setLoading(false);
       }
     })();
     if (issuper) {
@@ -311,7 +324,11 @@ function AllCheckins() {
           </div>
         </div>
       ) : null}
-
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>
+        </div>
+      )}
       {showAlert && (
         <CustomAlert
           message={alertMessage}

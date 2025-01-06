@@ -1,3 +1,4 @@
+import { Op } from "sequelize";
 import sequelize from "../dbconnection.js";
 import { Booking } from "../Models/bookings.model.js";
 import { Location } from "../Models/location.model.js";
@@ -7,6 +8,7 @@ import {
   sendBookingCancellationEmail,
   sendBookingCreationEmail,
 } from "../utils/email.js";
+import { InvoiceGenerator, ViewInvoice } from "./invoice.controller.js";
 
 export const createBooking = async (req, res) => {
   const { bookingData } = req.body;
@@ -24,12 +26,18 @@ export const createBooking = async (req, res) => {
       transaction: transaction,
     });
     if (!checkRoomAvailability) {
+      await transaction.rollback();
       return res.status(400).json({ message: "Room does not exist" });
     }
+    if (checkRoomAvailability.state !== "active") {
+      throw new Error("Not accepting bookings in this room");
+    }
     if (checkRoomAvailability.no_of_rooms === 0) {
+      await transaction.rollback();
       return res.status(409).json({ message: "Room not Available" });
     }
     if (checkRoomAvailability.max_adults < bookingData.no_of_adults) {
+      await transaction.rollback();
       return res.status(400).json({
         message: `This room can have max ${checkRoomAvailability.max_adults} Adults`,
       });
@@ -38,6 +46,7 @@ export const createBooking = async (req, res) => {
       checkRoomAvailability.max_persons <
       bookingData.no_of_adults + bookingData.no_of_kids
     ) {
+      await transaction.rollback();
       return res.status(400).json({
         message: `Total People can't be more than ${checkRoomAvailability.max_persons}`,
       });
@@ -80,10 +89,10 @@ export const createBooking = async (req, res) => {
       { where: { room_id: bookingData.room_id }, transaction: transaction }
     );
     await transaction.commit();
-    await sendBookingCreationEmail(
-      newBooking.guest_email,
-      newBooking.booking_id
-    );
+    // await sendBookingCreationEmail(
+    //   newBooking.guest_email,
+    //   newBooking.booking_id
+    // );
 
     return res.status(200).json({ message: "Booking created successfully" });
   } catch (error) {
@@ -138,8 +147,25 @@ export const getBookingDetailsUserId = async (req, res) => {
 export const getAllBookings = async (req, res) => {
   try {
     const { id } = req.params;
+    const date = new Date();
+    const setDate = date.toISOString().split("T")[0];
     const bookings = await Booking.findAll({
-      where: { location_id: Number(id) },
+      where: { location_id: Number(id), check_out_date: { [Op.gte]: setDate } },
+      order: [["created_at", "DESC"]],
+    });
+    return res.status(200).json({ bookings: bookings });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+export const getAllBookingHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const date = new Date();
+    const setDate = date.toISOString().split("T")[0];
+    const bookings = await Booking.findAll({
+      where: { location_id: Number(id), check_out_date: { [Op.lte]: setDate } },
       order: [["created_at", "DESC"]],
     });
     return res.status(200).json({ bookings: bookings });
@@ -165,17 +191,39 @@ export const getBookingDetailsBookingId = async (req, res) => {
   if (!req.params.id) {
     return res.status(400).json({ message: "No Booking Id provided" });
   }
+  const { issuper, location_id } = req.user;
+  console.log(issuper, location_id, req.params.id);
   try {
-    const booking = await Booking.findOne({
-      where: { booking_id: req.params.id },
-    });
-    if (!booking) {
-      return res.status(400).json({ message: "Booking does not exist" });
+    if (issuper) {
+      const booking = await Booking.findOne({
+        where: {
+          booking_id: Number(req.params.id),
+        },
+      });
+
+      if (!booking) {
+        return res.status(400).json({ message: "Booking does not exist" });
+      }
+      if (booking.booking_status === "cancelled") {
+        return res.status(400).json({ message: "Booking has been cancelled" });
+      }
+      return res.status(200).json({ booking: booking });
+    } else {
+      const booking = await Booking.findOne({
+        where: {
+          booking_id: Number(req.params.id),
+          location_id: Number(location_id),
+        },
+      });
+
+      if (!booking) {
+        return res.status(400).json({ message: "Booking does not exist" });
+      }
+      if (booking.booking_status === "cancelled") {
+        return res.status(400).json({ message: "Booking has been cancelled" });
+      }
+      return res.status(200).json({ booking: booking });
     }
-    if (booking.booking_status === "cancelled") {
-      return res.status(400).json({ message: "Booking has been cancelled" });
-    }
-    return res.status(200).json({ booking: booking });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: error.message });
@@ -193,7 +241,6 @@ export const getAllBookingsCheckIns = async (req, res) => {
       where: {
         check_in_date: req.query.date,
         location_id: Number(id),
-        booking_status: "pending",
       },
       order: [["created_at", "DESC"]],
     });
@@ -276,6 +323,7 @@ export const getAllBookingsCheckOutsSuper = async (req, res) => {
 
 export const updatePaymentStatus = async (req, res) => {
   const { amount, price } = req.body;
+  console.log("Update", amount, price);
   if (!req.params.id) {
     return res.status(400).json({ message: "No booking id provided" });
   }
@@ -288,26 +336,27 @@ export const updatePaymentStatus = async (req, res) => {
       where: { booking_id: req.params.id },
       transaction: transaction,
     });
-    let amount_paid = booking.amount_paid + Number(amount);
-    let payment_due = parseInt(price * 1.12) - amount_paid;
-    if (payment_due == 0) {
+    let amountPaid = booking.amount_paid + Number(amount);
+    let paymentDue = booking.payment_due - amount;
+    if (paymentDue == 0) {
       const [rowsUpdated, updatedRows] = await Booking.update(
-        { payment_status: "paid", payment_due: 0, amount_paid: amount_paid },
+        { payment_status: "paid", payment_due: 0, amount_paid: amountPaid },
         {
           where: { booking_id: req.params.id },
           returning: true,
           transaction: transaction,
         }
       );
+      await transaction.commit();
       return res
         .status(200)
         .json({ message: "Payment Info updated", booking: updatedRows[0] });
-    } else if (payment_due > 0) {
+    } else if (paymentDue > 0) {
       const [rowsUpdated, updatedRows] = await Booking.update(
         {
           payment_status: "partial",
-          payment_due: payment_due,
-          amount_paid: amount_paid,
+          payment_due: paymentDue,
+          amount_paid: amountPaid,
         },
         {
           where: { booking_id: req.params.id },
@@ -319,7 +368,7 @@ export const updatePaymentStatus = async (req, res) => {
       return res
         .status(200)
         .json({ message: "Payment Info updated", booking: updatedRows[0] });
-    } else if (payment_due < 0) {
+    } else if (paymentDue < 0) {
       await transaction.rollback();
       return res.status(400).json({ message: "Payment amount incorrect" });
     }
@@ -392,11 +441,11 @@ export const updateCancelBookingStatus = async (req, res) => {
       { where: { room_id: updatedRows[0].room_id }, transaction: transaction }
     );
     await transaction.commit();
-    await sendBookingCancellationEmail(
-      updatedRows[0].guest_email,
-      updatedRows[0].booking_id,
-      updatedRows[0].cancellation_reasons
-    );
+    // await sendBookingCancellationEmail(
+    //   updatedRows[0].guest_email,
+    //   updatedRows[0].booking_id,
+    //   updatedRows[0].cancellation_reasons
+    // );
     return res.status(200).json({ message: "Booking Status updated" });
   } catch (error) {
     await transaction.rollback();
@@ -407,6 +456,7 @@ export const updateCancelBookingStatus = async (req, res) => {
 
 export const updateCheckedStatus = async (req, res) => {
   const { checked_status } = req.body;
+  const { username } = req.user;
   if (!req.params.id) {
     return res.status(400).json({ message: "No booking id provided" });
   }
@@ -420,22 +470,19 @@ export const updateCheckedStatus = async (req, res) => {
         { checked_status: checked_status },
         { where: { booking_id: req.params.id }, transaction: transaction }
       );
+      await transaction.commit();
+      return res.status(200).json({ message: "Check-in successful" });
     } else if (checked_status === "checked_out") {
       const checkpayment = await Booking.findOne({
         where: { booking_id: req.params.id },
         attributes: ["payment_status", "payment_due"],
         transaction: transaction,
       });
-      if (checkpayment.payment_status === "unpaid") {
+
+      if (["unpaid", "partial"].includes(checkpayment.payment_status)) {
         await transaction.rollback();
         return res.status(400).json({
           message: `Please take ₹${checkpayment.payment_due} rent from guest and update payment status`,
-        });
-      }
-      if (checkpayment.payment_status === "partial") {
-        await transaction.rollback();
-        return res.status(400).json({
-          message: `Please take ${checkpayment.payment_due} rent from guest and update payment status`,
         });
       }
 
@@ -453,18 +500,96 @@ export const updateCheckedStatus = async (req, res) => {
         attributes: ["no_of_rooms"],
         transaction: transaction,
       });
+
       await Room.update(
         { no_of_rooms: room.no_of_rooms + 1 },
         { where: { room_id: updatedRows[0].room_id }, transaction: transaction }
       );
-      await transaction.commit();
-      return res
-        .status(200)
-        .json({ message: "Checked Status updated", booking: updatedRows[0] });
+
+      // Generate invoice without sending response
+      await InvoiceGenerator(updatedRows[0], username, transaction);
+
+      // Let ViewInvoice handle the response
+      return ViewInvoice(updatedRows[0], res, transaction);
     }
   } catch (error) {
     await transaction.rollback();
     console.error(error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const editBooking = async (req, res) => {
+  try {
+    const { newData, booking_id } = req.body;
+    console.dir(newData, { depth: true });
+    console.log(booking_id, newData);
+    const checkbooking = await Booking.findByPk(Number(booking_id));
+    if (checkbooking.meal_chosen == false && newData.meal_chosen == true) {
+      checkbooking.meal_chosen = newData.meal_chosen;
+      checkbooking.meal_type = newData.meal_type;
+      checkbooking.breakfast = newData.breakfast;
+      checkbooking.lunch = newData.lunch;
+      checkbooking.dinner = newData.dinner;
+      checkbooking.payment_due =
+        checkbooking.payment_due - checkbooking.meal_price + newData.meal_price;
+      checkbooking.meal_price = newData.meal_price;
+    }
+    if (checkbooking.meal_chosen == true && newData.meal_chosen == true) {
+      checkbooking.meal_type = newData.meal_type;
+      checkbooking.breakfast = newData.breakfast;
+      checkbooking.lunch = newData.lunch;
+      checkbooking.dinner = newData.dinner;
+      checkbooking.payment_due =
+        checkbooking.payment_due - checkbooking.meal_price + newData.meal_price;
+      checkbooking.meal_price = newData.meal_price;
+    }
+    if (checkbooking.meal_chosen == true && newData.meal_chosen == false) {
+      return res.status(400).json({ message: "Not allowed" });
+    }
+    if (newData.selected_services) {
+      if (
+        !Array.isArray(newData.selected_services) ||
+        !newData.selected_services.every(
+          (item) =>
+            typeof item === "object" &&
+            "service_id" in item &&
+            "quantity" in item &&
+            "total_price" in item &&
+            "gst_rate" in item // Ensure GST rate is included
+        )
+      ) {
+        return res.status(400).json({
+          message:
+            "Invalid selected_services format. Must be an array of objects with service_id, quantity, total_price, and gst_rate.",
+        });
+      }
+
+      // Calculate new services price (pre-tax) and tax-inclusive total
+      const newServicePrice = newData.selected_services.reduce(
+        (total, service) => total + (service.total_price || 0),
+        0
+      );
+
+      const newServicePriceWithTax = newData.selected_services.reduce(
+        (total, service) => {
+          const gstMultiplier = 1 + service.gst_rate / 100; // Calculate tax
+          return total + (service.total_price * gstMultiplier || 0);
+        },
+        0
+      );
+
+      // Update booking with new services and prices
+      checkbooking.payment_due -= checkbooking.services_price || 0;
+      checkbooking.selected_services = newData.selected_services;
+      checkbooking.services_price = parseInt(newServicePrice); // Pre-tax total
+      checkbooking.payment_due += parseInt(newServicePriceWithTax); // Tax-inclusive total
+    }
+
+    await checkbooking.save();
+    return res.status(200).json({ message: "Booking Updated" });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error.message });
   }
 };

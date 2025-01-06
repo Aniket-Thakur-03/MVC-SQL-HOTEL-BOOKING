@@ -28,6 +28,16 @@ const adminSchema = z.object({
       /[@$!%*?&#]/,
       "Password must contain at least one special character (@$!%*?&#)"
     ),
+  repassword: z
+    .string()
+    .min(8, "Password must have at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(
+      /[@$!%*?&#]/,
+      "Password must contain at least one special character (@$!%*?&#)"
+    ),
 });
 function CreateUser() {
   const navigate = useNavigate();
@@ -38,6 +48,7 @@ function CreateUser() {
   const [email, setEmail] = useState("");
   const [phoneno, setPhoneno] = useState("");
   const [password, setPassword] = useState("");
+  const [repassword, setRePassword] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -77,33 +88,37 @@ function CreateUser() {
     e.preventDefault();
 
     const formData = { fullname, adminusername, email, phoneno, password };
-    const validation = adminSchema.safeParse(formData);
+    const validation = adminSchema.safeParse({ ...formData, repassword });
 
     if (validation.success) {
-      setLoading(true);
-      try {
-        const response = await axios.post(
-          "http://localhost:8000/api/users/admin/register",
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        if (response.status == 200) {
-          triggerAlert(`${response.data.message}`, "success");
+      if (password === repassword) {
+        setLoading(true);
+        try {
+          const response = await axios.post(
+            "http://localhost:8000/api/users/admin/register",
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+          if (response.status == 200) {
+            triggerAlert(`${response.data.message}`, "success");
 
-          setErrors({});
+            setErrors({});
+          }
+        } catch (error) {
+          console.error("Signup error:", error.response?.data || error);
+          triggerAlert(
+            `${error.response?.data.message || error.message}`,
+            "error"
+          );
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Signup error:", error.response?.data || error);
-        triggerAlert(
-          `${error.response?.data.message || error.message}`,
-          "error"
-        );
-      } finally {
-        setLoading(false);
+      } else {
+        triggerAlert("Retype Password is not same as password", "error");
       }
     } else {
       const fieldErrors = validation.error.format();
@@ -113,6 +128,7 @@ function CreateUser() {
         email: fieldErrors.email?._errors[0],
         phoneno: fieldErrors.phoneno?._errors[0],
         password: fieldErrors.password?._errors[0],
+        repassword: fieldErrors.repassword?._errors[0],
       });
     }
   };
@@ -246,6 +262,31 @@ function CreateUser() {
                     placeholder="Enter Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                  />
+                </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
+              <div className="relative">
+                <label
+                  htmlFor="repassword"
+                  className="text-sm font-medium text-gray-700 block mb-2"
+                >
+                  Re-Enter Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="password"
+                    id="repassword"
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg border ${
+                      errors.password ? "border-red-500" : "border-gray-300"
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150`}
+                    placeholder="Rewrite Password"
+                    value={repassword}
+                    onChange={(e) => setRePassword(e.target.value)}
                     disabled={loading}
                   />
                 </div>

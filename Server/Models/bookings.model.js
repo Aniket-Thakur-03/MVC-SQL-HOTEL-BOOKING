@@ -198,6 +198,15 @@ const Booking = sequelize.define(
         key: "location_id",
       },
     },
+    selected_services: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
+    services_price: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     timestamps: true,

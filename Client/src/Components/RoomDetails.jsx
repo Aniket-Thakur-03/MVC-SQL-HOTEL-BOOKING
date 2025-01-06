@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 import CheckIn from "./CheckIn";
 import CheckOut from "./CheckOut";
@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
 import { facilities } from "../data";
 import axios from "axios";
+import ImageCarousel from "./ImageCarousel";
 function RoomDetails() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -31,12 +32,6 @@ function RoomDetails() {
     const decoded = jwtDecode(token);
     return decoded.user_id;
   }
-  useEffect(() => {
-    if (!localStorage.getItem("token")) {
-      triggerAlert("User logged off, Please sign in again", "error");
-      setTimeout(() => (window.location.href = "/"), 3000);
-    }
-  });
   const [selectedCountryName, setSelectedCountryName] = useState("");
   const [selectedStateName, setSelectedStateName] = useState("");
   const [selectedCityName, setSelectedCityName] = useState("");
@@ -71,7 +66,8 @@ function RoomDetails() {
         setCountries([]);
       }
     } catch (error) {
-      triggerAlert(`${error.response?.data.message || error.message}`, "error");
+      console.log(error);
+      {localStorage.getItem("isLoggedIn") ? triggerAlert(`${error.response?.data.message || error.message}`, "error"): null}
     }
   }
   const [selectedCountryId, setSelectedCountryId] = useState(null);
@@ -154,9 +150,20 @@ function RoomDetails() {
     max_adults,
     selling_price,
     room_id,
-    big_image_link,
+    image_link_2,
+    image_link_3,
+    image_link_4,
+    image_link_5,
+    image_link_6,
     location_id,
   } = room;
+  const images = [
+    image_link_2,
+    image_link_3,
+    image_link_4,
+    image_link_5,
+    image_link_6,
+  ].filter(Boolean);
   useEffect(() => {
     fetchLocationRoom(location_id);
   }, []);
@@ -276,11 +283,7 @@ function RoomDetails() {
                   quibusdam quis beatae quae labore earum architecto aliquid
                   debitis.
                 </p>
-                <img
-                  className="mb-8"
-                  src={`http://localhost:8000${big_image_link}`}
-                  alt="Large Image"
-                />
+                <ImageCarousel images={images}/>
                 <div>
                   <h3 className="h3 mb-3">Room Facilities</h3>
                   <p className="mb-12">
@@ -500,13 +503,13 @@ function RoomDetails() {
                       value={request}
                       onChange={(e) => setRequest(e.target.value)}
                     />
-                    <button
+                    {localStorage.getItem("isLoggedIn")?<button
                       type="submit"
                       className="h-[60px] btn btn-lg btn-primary w-full"
                       onClick={(e) => handleSubmit(e)}
                     >
                       Review Booking
-                    </button>
+                    </button>: <Link state={{ from: location.pathname }}  to="/login" className="h-[100px] btn btn-lg btn-primary w-full" replace={true}>Login to Book</Link>}
                   </div>
                 </div>
               </form>

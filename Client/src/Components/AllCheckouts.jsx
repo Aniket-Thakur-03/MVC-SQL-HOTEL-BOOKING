@@ -11,6 +11,7 @@ function AllCheckouts() {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [filter, setFilter] = useState("");
+  const [loading, setLoading] = useState(false);
   const location_id = jwtDecode(localStorage.getItem("token")).location_id;
   const locationId = jwtDecode(localStorage.getItem("token")).location_id;
   const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
@@ -30,6 +31,7 @@ function AllCheckouts() {
     const formattedDate = today.toISOString().split("T")[0];
     console.log(today, formattedDate);
     try {
+      setLoading(true);
       const response = await axios.get(
         `http://localhost:8000/api/booking/details/${
           issuper ? location : location_id
@@ -40,15 +42,23 @@ function AllCheckouts() {
           },
         }
       );
+      setShowbookings(true);
       console.log(response);
       if (response.status == 200) {
         setData(response.data.bookings);
         setFilteredData(response.data.bookings);
+      } else {
+        setData([]);
+        setFilteredData([]);
       }
     } catch (error) {
+      setData([]);
+      setFilteredData([]);
       console.error("Error fetching booking details:", error);
       setError(`${error.response?.data?.message || error.message}`);
       triggerAlert(`${error.response?.data.message || error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,33 +75,75 @@ function AllCheckouts() {
 
   const handleCheckout = async (id) => {
     try {
+      setLoading(true);
       const response = await axios.patch(
-        `http://localhost:8000/api/booking/update/checked/${id}`,
+        `http://localhost:8000/api/booking/update/checked/${item.booking_id}`,
         { checked_status: "checked_out" },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
+          responseType: "blob",
         }
       );
-      if (response.status == 200) {
-        setFilteredData((prevData) =>
-          prevData.map((item) =>
-            item.booking_id === id
+
+      // Verify the response is a PDF
+      if (response.headers["content-type"].includes("application/pdf")) {
+        // Create blob with proper type
+        const blob = new Blob([response.data], {
+          type: "application/pdf",
+        });
+
+        // Create object URL
+        const url = window.URL.createObjectURL(blob);
+
+        // Option 1: Download the file
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `INVOICE${item.booking_id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Option 2: Open in new tab (uncommment if you prefer this)
+        // window.open(url, '_blank');
+
+        // Cleanup
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
+
+        // Update UI state
+        setData((prevData) =>
+          prevData.map((booking) =>
+            booking.booking_id === item.booking_id
               ? {
-                  ...item,
-                  checked_status: response.data.booking.checked_status,
+                  ...booking,
+                  checked_status: "checked_out",
                 }
-              : item
+              : booking
           )
         );
-        triggerAlert("Checkout completed successfully!", "success");
+      } else {
+        triggerAlert("Invalid Response Format", "error");
       }
     } catch (error) {
-      triggerAlert(
-        `${error.response?.data?.message || error.message}`,
-        "error"
-      );
+      if (error.response?.data instanceof Blob) {
+        const text = await new Response(error.response.data).text();
+        try {
+          const errorData = JSON.parse(text);
+          triggerAlert(`${errorData.message}`, "error");
+        } catch (e) {
+          triggerAlert("Error processing the response", "error");
+        }
+      } else {
+        triggerAlert(
+          `${error.response?.data?.message || error.message}`,
+          "error"
+        );
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -104,6 +156,7 @@ function AllCheckouts() {
     }
     (async () => {
       try {
+        setLoading(true);
         const response = await axios.post(
           "http://localhost:8000/api/preference/search/feature/access/v1/admin",
           {
@@ -123,11 +176,14 @@ function AllCheckouts() {
       } catch (error) {
         navigate("/unauthorized", { replace: true });
         return;
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
   async function fetchLocations() {
     try {
+      setLoading(true);
       const response = await axios.get(
         "http://localhost:8000/api/location/get/admin/location",
         {
@@ -141,6 +197,8 @@ function AllCheckouts() {
       }
     } catch (error) {
       triggerAlert(`${error.response?.data.message || error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   }
   useEffect(() => {
@@ -338,6 +396,11 @@ function AllCheckouts() {
           type={alertType}
           onClose={() => setShowAlert(false)}
         />
+      )}
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>
+        </div>
       )}
     </div>
   );

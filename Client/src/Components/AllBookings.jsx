@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import CustomAlert from "./Notification/CustomAlert";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import { AddServices } from "./AddServices";
 
 function AllBookings() {
   const navigate = useNavigate();
@@ -20,10 +21,14 @@ function AllBookings() {
   const location_id = jwtDecode(localStorage.getItem("token")).location_id;
   const issuper = jwtDecode(localStorage.getItem("token")).issuper;
   const [showbookings, setShowbookings] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddServiceModel, setIsAddServiceModel] = useState(false);
+  const [editBooking, setEditBooking] = useState({});
+  const [roomBooking, setRoomBooking] = useState({});
   const [selectLocationId, setSelectLocationId] = useState(null);
   const [selectedBookingId, setSelectedBookingId] = useState(null);
   const [cancellationReason, setCancellationReason] = useState("");
@@ -32,6 +37,7 @@ function AllBookings() {
   const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
   const fetchHistory = async (location) => {
     try {
+      setLoading(true);
       const token = localStorage.getItem("token");
       const response = await axios.get(
         `http://localhost:8000/api/booking/details/all/booking/${
@@ -51,6 +57,8 @@ function AllBookings() {
       setErrors({
         api: error.response?.data.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
@@ -67,6 +75,7 @@ function AllBookings() {
     }
     (async () => {
       try {
+        setLoading(true);
         const response = await axios.post(
           "http://localhost:8000/api/preference/search/feature/access/v1/admin",
           {
@@ -86,6 +95,8 @@ function AllBookings() {
       } catch (error) {
         navigate("/unauthorized", { replace: true });
         return;
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -102,6 +113,7 @@ function AllBookings() {
   };
   async function fetchLocations() {
     try {
+      setLoading(true);
       const response = await axios.get(
         "http://localhost:8000/api/location/get/admin/location",
         {
@@ -115,9 +127,30 @@ function AllBookings() {
       }
     } catch (error) {
       triggerAlert(`${error.response?.data.message || error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   }
-
+  async function fetchRoomPrice(id) {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `http://localhost:8000/api/rooms/get/one/room/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status == 200) {
+        setRoomBooking(response.data.room);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }
   useEffect(() => {
     const filtered = data.filter((item) => {
       const matchesBookingId = filters.bookingId
@@ -143,12 +176,36 @@ function AllBookings() {
   };
 
   const closeModal = () => {
+    setEditBooking({});
+    setIsAddServiceModel(false);
     setIsModalOpen(false);
     setCancellationReason("");
     setCustomReason("");
     setSelectedBookingId(null);
   };
-
+  const handleEditing = async (data, id) => {
+    try {
+      setLoading(true);
+      const response = await axios.patch(
+        "http://localhost:8000/api/booking/edit/add/services",
+        { newData: { ...data }, booking_id: id },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status == 200) {
+        triggerAlert(`${response.data.message}`, "success");
+        fetchHistory(selectLocationId);
+      }
+    } catch (error) {
+      triggerAlert(`${error.response?.data.message || error.message}`, "error");
+    } finally {
+      setIsAddServiceModel(false);
+      setLoading(false);
+    }
+  };
   const handleCancelBooking = async () => {
     if (!cancellationReason) {
       toast.error("Please select a cancellation reason.");
@@ -159,6 +216,7 @@ function AllBookings() {
       cancellationReason === "Other" ? customReason : cancellationReason;
 
     try {
+      setLoading(true);
       const response = await axios.patch(
         `http://localhost:8000/api/booking/update/booking/cancel/${selectedBookingId}`,
         { booking_status: "cancelled", cancellation_reason: reason },
@@ -179,6 +237,8 @@ function AllBookings() {
       closeModal();
     } catch (error) {
       toast.error(`Error: ${error.response?.data.message || error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
   const handleLocationChange = (e) => {
@@ -335,6 +395,7 @@ function AllBookings() {
                       onClick={async (e) => {
                         e.preventDefault();
                         try {
+                          setLoading(true);
                           const response = await axios.patch(
                             `http://localhost:8000/api/booking/update/checked/${item.booking_id}`,
                             { checked_status: "checked_out" },
@@ -344,24 +405,94 @@ function AllBookings() {
                                   "token"
                                 )}`,
                               },
+                              responseType: "blob",
                             }
                           );
-                          setData((prevData) =>
-                            prevData.map((booking) =>
-                              booking.booking_id === item.booking_id
-                                ? { ...booking, checked_status: "checked_out" }
-                                : booking
+
+                          // Verify the response is a PDF
+                          if (
+                            response.headers["content-type"].includes(
+                              "application/pdf"
                             )
-                          );
-                          toast.success(`${response.data.message}`);
+                          ) {
+                            // Create blob with proper type
+                            const blob = new Blob([response.data], {
+                              type: "application/pdf",
+                            });
+
+                            // Create object URL
+                            const url = window.URL.createObjectURL(blob);
+
+                            // Option 1: Download the file
+                            const link = document.createElement("a");
+                            link.href = url;
+                            link.setAttribute(
+                              "download",
+                              `INVOICE${item.booking_id}.pdf`
+                            );
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+
+                            // Option 2: Open in new tab (uncommment if you prefer this)
+                            // window.open(url, '_blank');
+
+                            // Cleanup
+                            setTimeout(() => {
+                              window.URL.revokeObjectURL(url);
+                            }, 100);
+
+                            // Update UI state
+                            setData((prevData) =>
+                              prevData.map((booking) =>
+                                booking.booking_id === item.booking_id
+                                  ? {
+                                      ...booking,
+                                      checked_status: "checked_out",
+                                    }
+                                  : booking
+                              )
+                            );
+
+                            toast.success("Checkout successful");
+                          } else {
+                            throw new Error("Invalid response format");
+                          }
                         } catch (error) {
-                          toast.error(
-                            `${error.response?.data.message || error.message}`
-                          );
+                          if (error.response?.data instanceof Blob) {
+                            const text = await new Response(
+                              error.response.data
+                            ).text();
+                            try {
+                              const errorData = JSON.parse(text);
+                              toast.error(errorData.message);
+                            } catch (e) {
+                              toast.error("Error processing the response");
+                            }
+                          } else {
+                            toast.error(
+                              error.response?.data?.message || error.message
+                            );
+                          }
+                        } finally {
+                          setLoading(false);
                         }
                       }}
                     >
                       Checkout
+                    </button>
+                  )}
+                {item.booking_status === "confirmed" &&
+                  item.checked_status === "checked_in" && (
+                    <button
+                      onClick={() => {
+                        setIsAddServiceModel(true);
+                        setEditBooking(item);
+                        fetchRoomPrice(item.room_id);
+                      }}
+                      className="px-4 py-2 ml-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    >
+                      Add Services
                     </button>
                   )}
               </div>
@@ -450,6 +581,19 @@ function AllBookings() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {isAddServiceModel && (
+        <AddServices
+          room={roomBooking}
+          booking={editBooking}
+          handleEditing={handleEditing}
+          showModal={setIsAddServiceModel}
+        />
+      )}
+      {loading && (
+        <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>
         </div>
       )}
       {showAlert && (

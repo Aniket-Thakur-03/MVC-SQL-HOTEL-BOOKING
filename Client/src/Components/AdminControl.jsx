@@ -184,7 +184,6 @@ function AdminControl() {
   const [editData, setEditData] = useState({
     adminId: selectEditAdminId,
     locationId: selectEditLocationId,
-    newlocationId: null,
     preference: selectPreference,
     isActive: editIsActive,
   });
@@ -468,23 +467,19 @@ function AdminControl() {
                       htmlFor="location"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Change Location
+                      Location
                     </label>
                     <select
                       id="location"
                       className="w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                      onChange={(e) =>
-                        setEditData((prev) => ({
-                          ...prev,
-                          newlocationId: e.target.value,
-                        }))
-                      }
-                      value={editData.newlocationId || selectEditLocationId}
+                      value={editData.locationId}
+                      disabled={true}
                     >
                       {locations.map((location) => (
                         <option
                           key={location.location_id}
                           value={location.location_id}
+                          disabled={true}
                         >
                           {`${location.location_name}-${location.city}(${location.pincode})`}
                         </option>

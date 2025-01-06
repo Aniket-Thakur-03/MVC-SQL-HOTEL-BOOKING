@@ -171,7 +171,7 @@ function UpdatePayment() {
                 try {
                   const response = await axios.patch(
                     `http://localhost:8000/api/booking/update/payment/${id}`,
-                    { price: data.room_price, amount: Number(amount) },
+                    { price: data.payment_due, amount: Number(amount) },
                     {
                       headers: {
                         Authorization: `Bearer ${localStorage.getItem(
@@ -184,6 +184,7 @@ function UpdatePayment() {
                     ...prevData,
                     payment_status: response.data.booking.payment_status,
                     payment_due: response.data.booking.payment_due,
+                    amount_paid: response.data.booking.amount_paid,
                   }));
                   triggerAlert(
                     "Payment status updated successfully!",
