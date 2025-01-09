@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Notification/CustomAlert";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
+import ExcelSVG from "../../assets/xls-svgrepo-com.svg";
 function Locations() {
   const [loading, setLoading] = useState(false);
   const [locations, setLocations] = useState([]);
@@ -20,6 +22,7 @@ function Locations() {
     pincode: "",
     phoneno: "",
     isActive: false,
+    locationfile:null
   });
   const currentlocationId = jwtDecode(
     localStorage.getItem("token")
@@ -60,12 +63,14 @@ function Locations() {
     try {
       setLoading(true);
       if (isAdding) {
+        console.log(formValues);
         await axios.post(
           "http://localhost:8000/api/location/create/location",
-          { loactionData: formValues },
+          formValues,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "multipart/form-data"
             },
           }
         );
@@ -78,6 +83,7 @@ function Locations() {
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "multipart/form-data"
             },
           }
         );
@@ -93,6 +99,7 @@ function Locations() {
         pincode: "",
         phoneno: "",
         isActive: false,
+        locationfile:null
       });
     } catch (error) {
       setError(`${error.response?.data.message || error.message}`);
@@ -103,11 +110,23 @@ function Locations() {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormValues((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value, type, checked, files } = e.target;
+    if (type === "checkbox") {
+      setFormValues((prev) => ({
+        ...prev,
+        [name]: checked,
+      }));
+    } else if (type === "file") {
+      setFormValues((prev) => ({
+        ...prev,
+        [name]: files[0],
+      }));
+    } else {
+      setFormValues((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
   useEffect(() => {
     fetchLocations();
@@ -128,17 +147,126 @@ function Locations() {
           }
         );
         if (response.status === 200) {
-          return; // Do nothing if authorized
+          return;
         }
       } catch (error) {
         navigate("/unauthorized", { replace: true });
       }
     };
-    fetchPreferences(); // Properly invoking the function
+    fetchPreferences();
   }, []);
+
+  async function handleLocationExcel(location) {
+    try {
+      setLoading(true);
+      const response = await axios.get(`http://localhost:8000/api/location/get/single/location/details/${location.location_id}`,
+        {
+          headers:{
+            Authorization:`Bearer ${localStorage.getItem("token")}`
+          }
+        }
+      );
+      if(response.status == 200){
+        const roomsData = response.data.roomdetails;
+        const servicesData = response.data.servicedetails;
+        try {
+          const formattedRooms = roomsData.map((room) => ({
+            "room_id":room.room_id,
+            "roomtype_id": room.roomtype_id,
+            "retail_price": room.retail_price,
+            "selling_price": room.selling_price,
+            "meals_available": room.meals_available,
+            "veg_meals_price": room.veg_meals_price,
+            "non_veg_meals_price": room.non_veg_meals_price,
+            "no_of_rooms": room.no_of_rooms,
+            "image_link_1": room.image_link_1,
+            "image_link_2": room.image_link_2,
+            "image_link_3": room.image_link_3,
+            "image_link_4": room.image_link_4,
+            "image_link_5": room.image_link_5,
+            "image_link_6": room.image_link_6,
+          }));
+          const formattedServices = servicesData.map((service) => ({
+            "service_id":service.service_id,
+            "service_name": service.service_name,
+            "service_price": service.service_price,
+            "gst_rate": service.gst_rate,
+          }));
+          const workbook = XLSX.utils.book_new();
+          const roomsWorksheet = XLSX.utils.json_to_sheet(formattedRooms);
+          XLSX.utils.book_append_sheet(workbook, roomsWorksheet, "Rooms");
+          const servicesWorksheet = XLSX.utils.json_to_sheet(formattedServices);
+          XLSX.utils.book_append_sheet(workbook, servicesWorksheet, "Services");
+          const excelBuffer = XLSX.write(workbook, {
+            bookType: "xlsx",
+            type: "array",
+          });
+          const blob = new Blob([excelBuffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          });
+          saveAs(blob, `location_${location.location_id}_${location.city}_${location.pincode}_details.xlsx`);
+        } catch (error) {
+          console.error("Excel export error:", error);
+          triggerAlert("Failed to generate Excel file", "error");
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      triggerAlert(`${error.response?.data.message || error.message}`,"error");
+    }finally{
+      setLoading(false)
+    }
+    
+  }
+  function handleSingleFormat (){
+    try {
+      setLoading(true);
+      const roomheader = [{
+        "room_id":null,
+        "roomtype_id": null,
+        "retail_price": null,
+        "selling_price": null,
+        "meals_available": null,
+        "veg_meals_price": null,
+        "non_veg_meals_price": null,
+        "no_of_rooms": null,
+        "image_link_1": null,
+        "image_link_2": null,
+        "image_link_3": null,
+        "image_link_4": null,
+        "image_link_5": null,
+        "image_link_6": null,
+      }];
+      const serviceheader = [{
+        "servie_id":null,
+        "service_name": null,
+        "service_price": null,
+        "gst_rate": null,
+      }];
+      const workbook = XLSX.utils.book_new();
+      const roomsWorksheet = XLSX.utils.json_to_sheet(roomheader);
+      XLSX.utils.book_append_sheet(workbook, roomsWorksheet, "Rooms");
+      const servicesWorksheet = XLSX.utils.json_to_sheet(serviceheader);
+      XLSX.utils.book_append_sheet(workbook, servicesWorksheet, "Services");
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+      const blob = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, `location_header_format.xlsx`);
+    } catch (error) {
+      console.error("Excel export error:", error);
+      triggerAlert("Failed to generate Excel file", "error");
+    }finally{
+      setLoading(false)
+    }
+  }
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Manage Locations</h1>
+      <div className="flex items-center justify-between">
       <button
         onClick={() => {
           setFormValues({
@@ -150,14 +278,19 @@ function Locations() {
             pincode: "",
             phoneno: "",
             isActive: false,
+            locationfile:null
           });
           setIsAdding(true);
         }}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
       >
         Add Location
       </button>
-      <div className="overflow-x-auto">
+      <button onClick={handleSingleFormat} className={`flex items-center gap-4 px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600`}>
+        Location Data Format<img src={ExcelSVG} alt="Excel button" className="w-6 h-6" />
+      </button>
+      </div>
+      <div className="mt-5 overflow-x-auto">
         <table className="table-auto w-full border-collapse border border-gray-200">
           <thead>
             <tr className="bg-gray-200">
@@ -172,6 +305,7 @@ function Locations() {
               <th className="border border-gray-300 px-4 py-2">Pincode</th>
               <th className="border border-gray-300 px-4 py-2">Phoneno</th>
               <th className="border border-gray-300 px-4 py-2">Status</th>
+              <th className="border border-gray-300 px-4 py-2">Excel Details</th>
               <th className="border border-gray-300 px-4 py-2">Actions</th>
             </tr>
           </thead>
@@ -209,6 +343,11 @@ function Locations() {
                 >
                   {location.isActive ? "Active" : "Inactive"}
                 </td>
+                <td className="border border-gray-300 px-4 py-2 text-center">
+                <button onClick={() => handleLocationExcel(location)} className={`flex items-center gap-4 px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600`}>
+                Excel<img src={ExcelSVG} alt="Excel button" className="w-6 h-6" />
+                </button>
+                </td>
                 <td className="border border-gray-300 px-8 flex py-4">
                   <button
                     onClick={() => {
@@ -221,6 +360,7 @@ function Locations() {
                         pincode: location.pincode,
                         phoneno: location.phoneno,
                         isActive: location.isActive,
+                        locationfile:null
                       });
                       setLocationId(location.location_id);
                       setIsEditing(true);
@@ -336,6 +476,15 @@ function Locations() {
                   />
                 </div>
               )}
+              {isAdding && <div><label htmlFor="locationfile">Upload Rooms and Services Data</label>
+              <input 
+                type="file" 
+                name="locationfile" 
+                id="locationfile" 
+                onChange={handleInputChange} 
+                // accept=".xlsx, .xls" 
+              />
+              </div>}
             </form>
             <div className="mt-6 flex justify-end gap-4">
               <button
@@ -357,6 +506,7 @@ function Locations() {
                     pincode: "",
                     phoneno: "",
                     isActive: false,
+                    locationfile:null
                   });
                 }}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"

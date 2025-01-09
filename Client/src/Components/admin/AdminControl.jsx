@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Notification/CustomAlert";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 function AdminControl() {

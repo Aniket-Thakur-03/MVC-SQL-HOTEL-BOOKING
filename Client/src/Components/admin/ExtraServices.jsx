@@ -1,41 +1,32 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import CustomAlert from "./Notification/CustomAlert";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-
-export const AllStates = () => {
-  const navigate = useNavigate();
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [selectedCountryId, setSelectedCountryId] = useState(null);
+export const ExtraServices = () => {
+  const [services, setServices] = useState([]);
   const [errors, setErrors] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [formValues, setFormValues] = useState({
-    state_code: "",
-    state_name: "",
-    isActive: false,
+    service_name: "",
+    service_price: 0,
+    gst_rate: 0,
+    isactive: false,
   });
+  const [editServiceId, setEditServiceId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [locations, setLocations] = useState([]);
+  const [selectLocationId, setSelectLocationId] = useState(null);
   const locationId = jwtDecode(localStorage.getItem("token")).location_id;
   const adminId = jwtDecode(localStorage.getItem("token")).admin_id;
-  const [editStateId, setEditStateId] = useState(null);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState("success");
-  const triggerAlert = (message, type) => {
-    setAlertMessage(message);
-    setAlertType(type);
-    setShowAlert(true);
-  };
-
-  // Fetch countries for dropdown
-  async function fetchCountries() {
+  const issuper = jwtDecode(localStorage.getItem("token")).issuper;
+  const [showServices, setShowServices] = useState(true);
+  const navigate = useNavigate();
+  async function fetchLocations() {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:8000/api/country/get",
+        "http://localhost:8000/api/location/get/admin/location",
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -43,25 +34,20 @@ export const AllStates = () => {
         }
       );
       if (response.status === 200) {
-        setCountries(response.data.countries);
-        setErrors("");
-      } else {
-        setCountries([]);
+        setLocations(response.data.locations);
       }
     } catch (error) {
-      setErrors(`${error.response?.data.message || error.message}`);
       triggerAlert(`${error.response?.data.message || error.message}`, "error");
     } finally {
       setLoading(false);
     }
   }
-
-  // Fetch states for selected country
-  async function fetchStates(countryId) {
+  async function fetchServices(location) {
     try {
-      setLoading(true);
       const response = await axios.get(
-        `http://localhost:8000/api/state/get/${countryId}`,
+        `http://localhost:8000/api/extra/get/all/extra/services/${
+          location || selectLocationId
+        }`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -69,27 +55,25 @@ export const AllStates = () => {
         }
       );
       if (response.status === 200) {
-        setStates(response.data.states);
+        setServices(response.data.services);
         setErrors("");
+        setShowServices(true);
       } else {
-        setStates([]);
+        setShowServices(true);
+        setServices([]);
       }
     } catch (error) {
       setErrors(`${error.response?.data.message || error.message}`);
-      triggerAlert(`${error.response?.data.message || error.message}`, "error");
-    } finally {
-      setLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchCountries();
     (async () => {
       try {
         const response = await axios.post(
           "http://localhost:8000/api/preference/search/feature/access/v1/admin",
           {
-            feature_id: 7,
+            feature_id: 13,
             admin_id: adminId,
             location_id: locationId,
           },
@@ -107,6 +91,12 @@ export const AllStates = () => {
         return;
       }
     })();
+    if (issuper) {
+      setShowServices(false);
+      fetchLocations();
+    } else {
+      fetchServices(locationId);
+    }
   }, []);
 
   // Handle input change for form
@@ -120,128 +110,146 @@ export const AllStates = () => {
 
   // Handle save for adding or editing
   const handleSave = async () => {
+    console.log("add", formValues);
     try {
-      setLoading(true);
+      const updatedFormValues = {
+        ...formValues,
+        service_price: Number(formValues.service_price),
+        locationId: locationId || selectLocationId, // Include locationId explicitly
+      };
       if (isAdding) {
-        // Add State
-        const response = await axios.post(
-          "http://localhost:8000/api/state/create/state",
-          { ...formValues, country_id: selectedCountryId },
+        // Add Country
+        await axios.post(
+          "http://localhost:8000/api/extra/create/extra/services",
+          updatedFormValues,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
-        if (response.status == 200) {
-          triggerAlert(`${response.data.message}`, "success");
-          fetchStates(selectedCountryId);
-        }
+        fetchServices(locationId);
         setIsAdding(false);
       } else if (isEditing) {
-        // Edit State
-        const response = await axios.patch(
-          `http://localhost:8000/api/state/edit/state/${editStateId}`,
-          formValues,
+        // Edit Country
+        await axios.patch(
+          `http://localhost:8000/api/extra/update/extra/services/${editServiceId}`,
+          updatedFormValues,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           }
         );
-        if (response.status == 200) {
-          triggerAlert(`${response.data.message}`, "success");
-          fetchStates(selectedCountryId);
-        }
+        fetchServices(locationId);
         setIsEditing(false);
       }
-      setFormValues({ state_code: "", state_name: "", isActive: false });
+      setFormValues({
+        service_name: "",
+        service_price: 0,
+        gst_rate: 0,
+        isactive: false,
+      });
     } catch (error) {
-      triggerAlert(`${error.response?.data.message || error.message}`, "error");
+      console.log(error);
       setErrors(`${error.response?.data.message || error.message}`);
-    } finally {
-      setLoading(false);
+    }
+  };
+  const handleLocationChange = (e) => {
+    const selectedValue = e.target.value ? parseInt(e.target.value, 10) : null;
+    setSelectLocationId(selectedValue);
+    console.log(selectedValue);
+    if (selectedValue) {
+      fetchServices(selectedValue);
+      // Fetch rooms for the selected location
+    } else {
+      setServices([]); // Clear rooms if no location is selected
     }
   };
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">All States and UTs</h1>
-
-      {/* Country Selection Dropdown */}
-      <select
-        className="mb-4 px-4 py-2 border rounded w-full"
-        onChange={(e) => {
-          const countryId = e.target.value;
-          setSelectedCountryId(countryId);
-          if (countryId) {
-            fetchStates(countryId);
-          } else {
-            setStates([]);
-          }
-        }}
-        value={selectedCountryId || ""}
-      >
-        <option value="" disabled>
-          Select a country
-        </option>
-        {countries.map((country) => (
-          <option key={country.country_id} value={country.country_id}>
-            {country.country_name}({country.country_iso_code})
-          </option>
-        ))}
-      </select>
-
-      {/* States Table */}
-      {selectedCountryId && (
-        <>
+      {issuper ? (
+        <div>
+          <div>
+            <label htmlFor="locationid">Select Location</label>
+            <select
+              className="mb-4 px-4 py-2 border rounded w-full"
+              name="location"
+              id="locationid"
+              onChange={handleLocationChange}
+              value={selectLocationId || ""}
+            >
+              <option value="">Select location</option>
+              {locations.map((location) => (
+                <option
+                  key={location.location_id}
+                  value={location.location_id.toString()}
+                >
+                  {`${location.location_name}-${location.city}(${location.pincode})`}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      ) : null}
+      {showServices ? (
+        <div>
           <button
             onClick={() => {
               setFormValues({
-                state_code: "",
-                state_name: "",
-                isActive: false,
+                service_name: "",
+                service_price: 0,
+                gst_rate: 0,
+                isactive: false,
               });
               setIsAdding(true);
             }}
             className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Add State
+            Add Service
           </button>
 
+          {/* Countries Table */}
           <table className="min-w-full border border-gray-300">
             <thead>
               <tr className="bg-gray-200">
-                <th className="px-4 py-2 border">Code</th>
+                <th className="px-4 py-2 border">ID</th>
                 <th className="px-4 py-2 border">Name</th>
-                <th className="px-4 py-2 border">Active</th>
+                <th className="px-4 py-2 border">Price</th>
+                <th className="px-4 py-2 border">GST</th>
+                <th className="px-4 py-2 border">State</th>
                 <th className="px-4 py-2 border">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {states.map((state) => (
-                <tr key={state.state_id} className="text-center">
-                  <td className="px-4 py-2 border">{state.state_code}</td>
-                  <td className="px-4 py-2 border">{state.state_name}</td>
+              {services.map((service) => (
+                <tr key={service.service_id} className="text-center">
+                  <td className="px-4 py-2 border">{service.service_id}</td>
+                  <td className="px-4 py-2 border">{service.service_name}</td>
+                  <td className="px-4 py-2 border">{service.service_price}</td>
+                  <td className="px-4 py-2 border">{service.gst_rate}</td>
                   <td
                     className={`px-4 py-2 border text-white ${
-                      state.isActive ? "bg-green-500" : "bg-red-500"
+                      service.isactive ? "bg-green-500" : "bg-red-500"
                     }`}
                   >
-                    {state.isActive ? "Active" : "InActive"}
+                    {service.isactive ? "Active" : "Inactive"}
                   </td>
                   <td className="px-4 py-2 border">
                     <button
                       onClick={() => {
                         setFormValues({
-                          state_code: state.state_code,
-                          state_name: state.state_name,
-                          isActive: state.isActive,
+                          service_name: service.service_name,
+                          service_price: service.service_price,
+                          gst_rate: service.gst_rate,
+                          isactive: service.isactive,
                         });
-                        setEditStateId(state.state_id);
+                        setEditServiceId(service.service_id);
+                        setSelectLocationId(service.location_id);
                         setIsEditing(true);
                       }}
-                      className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                      className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
                       Edit
                     </button>
@@ -250,37 +258,43 @@ export const AllStates = () => {
               ))}
             </tbody>
           </table>
-        </>
-      )}
+        </div>
+      ) : null}
 
       {/* Add/Edit Form */}
       {(isAdding || isEditing) && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
-              {isAdding ? "Add State" : "Edit State"}
+              {isAdding ? "Add Extra Service" : "Edit Extra Service"}
             </h2>
             <form className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  State Code:
-                </label>
+                <label className="block text-sm font-medium mb-1">Name:</label>
                 <input
                   type="text"
-                  name="state_code"
-                  value={formValues.state_code}
+                  name="service_name"
+                  value={formValues.service_name}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  State Name:
-                </label>
+                <label className="block text-sm font-medium mb-1">Price:</label>
                 <input
-                  type="text"
-                  name="state_name"
-                  value={formValues.state_name}
+                  type="number"
+                  name="service_price"
+                  value={formValues.service_price}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">{`GST(in %):`}</label>
+                <input
+                  type="number"
+                  name="gst_rate"
+                  value={formValues.gst_rate}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border rounded focus:ring focus:ring-blue-500"
                 />
@@ -291,8 +305,8 @@ export const AllStates = () => {
                 </label>
                 <input
                   type="checkbox"
-                  name="isActive"
-                  checked={formValues.isActive}
+                  name="isactive"
+                  checked={formValues.isactive}
                   onChange={handleInputChange}
                   className="h-5 w-5"
                 />
@@ -307,12 +321,13 @@ export const AllStates = () => {
               </button>
               <button
                 onClick={() => {
+                  setEditServiceId(null);
                   setIsAdding(false);
                   setIsEditing(false);
                   setFormValues({
-                    state_code: "",
-                    state_name: "",
-                    isActive: false,
+                    service_name: "",
+                    service_price: 0,
+                    isactive: false,
                   });
                 }}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
@@ -327,14 +342,6 @@ export const AllStates = () => {
         <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
           <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>
         </div>
-      )}
-
-      {showAlert && (
-        <CustomAlert
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setShowAlert(false)}
-        />
       )}
     </div>
   );

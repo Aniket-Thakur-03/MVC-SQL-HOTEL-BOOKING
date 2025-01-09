@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
-import Footer from "./Components/Footer";
-import Header from "./Components/Header";
+import Footer from "./Components/common/Footer.jsx";
+import Header from "./Components/common/Header.jsx";
 import "./index.css";
 import RoomProvider from "./Context/RoomContext";
 

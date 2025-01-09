@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Notification/CustomAlert";
 import { jwtDecode } from "jwt-decode";
 function UpdatePayment() {
   const navigate = useNavigate();

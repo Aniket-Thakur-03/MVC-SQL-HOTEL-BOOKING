@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import LogoDark from "../assets/img/logo-dark.svg";
+import LogoDark from "../../assets/img/logo-dark.svg";
 import { useEffect, useRef, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 export default function Header() {

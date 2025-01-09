@@ -2,10 +2,11 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Notification/CustomAlert";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
-import { AddServices } from "./AddServices";
+import { AddServices } from "../AddServices";
+import ConfirmationPopup from "../Notification/ConfirmationPopup";
 
 function AllBookings() {
   const navigate = useNavigate();
@@ -253,6 +254,92 @@ function AllBookings() {
       setFilteredData([]); // Clear rooms if no location is selected
     }
   };
+  const [isPopupOpen, setPopupOpen] = useState(false);
+  const [selectCheckoutBookingId, setSelectCheckoutBookingId] = useState(null);
+  
+    const handleOpenPopup = () => setPopupOpen(true);
+    const handleClosePopup = () => setPopupOpen(false);
+  
+    const handleConfirm = () => {
+      handleCheckout(selectCheckoutBookingId);
+      setPopupOpen(false);
+    };
+  const handleCheckout = async(id) => {
+    try {
+      setLoading(true);
+      const response = await axios.patch(
+        `http://localhost:8000/api/booking/update/checked/${id}`,
+        { checked_status: "checked_out" },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem(
+              "token"
+            )}`,
+          },
+          responseType: "blob",
+        }
+      );
+      if (
+        response.headers["content-type"].includes(
+          "application/pdf"
+        )
+      ) {
+        const blob = new Blob([response.data], {
+          type: "application/pdf",
+        });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute(
+          "download",
+          `INVOICE${item.booking_id}.pdf`
+        );
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // if Open in new tab (uncommment if you prefer this)
+        // window.open(url, '_blank');
+
+        // Cleanup
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+        }, 100);
+        setData((prevData) =>
+          prevData.map((booking) =>
+            booking.booking_id === item.booking_id
+              ? {
+                  ...booking,
+                  checked_status: "checked_out",
+                }
+              : booking
+          )
+        );
+
+        toast.success("Checkout successful");
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (error) {
+      if (error.response?.data instanceof Blob) {
+        const text = await new Response(
+          error.response.data
+        ).text();
+        try {
+          const errorData = JSON.parse(text);
+          toast.error(errorData.message);
+        } catch (e) {
+          toast.error("Error processing the response");
+        }
+      } else {
+        toast.error(
+          error.response?.data?.message || error.message
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="flex flex-col min-h-screen">
       {issuper ? (
@@ -390,99 +477,25 @@ function AllBookings() {
                 )}
                 {item.booking_status === "confirmed" &&
                   item.checked_status === "checked_in" && (
+                    <>
                     <button
                       className="px-4 py-2 ml-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                      onClick={async (e) => {
-                        e.preventDefault();
-                        try {
-                          setLoading(true);
-                          const response = await axios.patch(
-                            `http://localhost:8000/api/booking/update/checked/${item.booking_id}`,
-                            { checked_status: "checked_out" },
-                            {
-                              headers: {
-                                Authorization: `Bearer ${localStorage.getItem(
-                                  "token"
-                                )}`,
-                              },
-                              responseType: "blob",
-                            }
-                          );
-
-                          // Verify the response is a PDF
-                          if (
-                            response.headers["content-type"].includes(
-                              "application/pdf"
-                            )
-                          ) {
-                            // Create blob with proper type
-                            const blob = new Blob([response.data], {
-                              type: "application/pdf",
-                            });
-
-                            // Create object URL
-                            const url = window.URL.createObjectURL(blob);
-
-                            // Option 1: Download the file
-                            const link = document.createElement("a");
-                            link.href = url;
-                            link.setAttribute(
-                              "download",
-                              `INVOICE${item.booking_id}.pdf`
-                            );
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-
-                            // Option 2: Open in new tab (uncommment if you prefer this)
-                            // window.open(url, '_blank');
-
-                            // Cleanup
-                            setTimeout(() => {
-                              window.URL.revokeObjectURL(url);
-                            }, 100);
-
-                            // Update UI state
-                            setData((prevData) =>
-                              prevData.map((booking) =>
-                                booking.booking_id === item.booking_id
-                                  ? {
-                                      ...booking,
-                                      checked_status: "checked_out",
-                                    }
-                                  : booking
-                              )
-                            );
-
-                            toast.success("Checkout successful");
-                          } else {
-                            throw new Error("Invalid response format");
-                          }
-                        } catch (error) {
-                          if (error.response?.data instanceof Blob) {
-                            const text = await new Response(
-                              error.response.data
-                            ).text();
-                            try {
-                              const errorData = JSON.parse(text);
-                              toast.error(errorData.message);
-                            } catch (e) {
-                              toast.error("Error processing the response");
-                            }
-                          } else {
-                            toast.error(
-                              error.response?.data?.message || error.message
-                            );
-                          }
-                        } finally {
-                          setLoading(false);
-                        }
+                      onClick={()=>{
+                        setSelectCheckoutBookingId(item.booking_id)
+                        handleOpenPopup()
                       }}
                     >
                       Checkout
                     </button>
+                    <ConfirmationPopup
+                    isOpen={isPopupOpen}
+                    onClose={handleClosePopup}
+                    onConfirm={handleConfirm}
+                    message="Are you sure you want to checkout?"
+                  />
+                    </>
                   )}
-                {item.booking_status === "confirmed" &&
+                {item.booking_status === "confirmed" && item.payment_status !="paid" &&
                   item.checked_status === "checked_in" && (
                     <button
                       onClick={() => {

@@ -1,15 +1,15 @@
 import { jwtDecode } from "jwt-decode";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Notification/CustomAlert";
 import axios from "axios";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { InvoiceFormat } from "../Format/InvoiceFormat";
-import ExcelSVG from "../assets/xls-svgrepo-com.svg";
-import PDFSVG from "../assets/pdf-svgrepo-com.svg";
+import { InvoiceFormat } from "../../Format/InvoiceFormat";
+import ExcelSVG from "../../assets/xls-svgrepo-com.svg";
+import PDFSVG from "../../assets/pdf-svgrepo-com.svg";
 export const ViewInvoices = () => {
   const token = localStorage.getItem("token");
   const locationId = jwtDecode(token).location_id;
@@ -202,52 +202,58 @@ export const ViewInvoices = () => {
   }
   async function handleSinglePDF(invoice) {
     try {
-      // Create temporary container
+      // Create a detached container
       const invoiceHTML = InvoiceFormat(invoice);
       const invoiceContainer = document.createElement("div");
       invoiceContainer.style.position = "absolute";
       invoiceContainer.style.left = "-9999px";
       invoiceContainer.style.top = "0";
+      invoiceContainer.style.width = "210mm"; // Set width matching A4 size for better scaling
       invoiceContainer.innerHTML = invoiceHTML;
-      document.body.appendChild(invoiceContainer);
-
+  
+      // Use a shadow DOM to isolate styles and prevent conflicts
+      const shadowHost = document.createElement("div");
+      const shadowRoot = shadowHost.attachShadow({ mode: "open" });
+      shadowRoot.appendChild(invoiceContainer);
+      document.body.appendChild(shadowHost);
+  
       // Wait for any images to load
       await new Promise(resolve => setTimeout(resolve, 500));
-
+  
       // Generate PDF
       const canvas = await html2canvas(invoiceContainer, {
         scale: 2,
         logging: false,
         useCORS: true,
-        allowTaint: true
+        allowTaint: true,
       });
-
+  
       const imgWidth = 210; // A4 width in mm
       const pageHeight = 297; // A4 height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      
+  
       const pdf = new jsPDF("p", "mm", "a4");
       const imgData = canvas.toDataURL("image/png");
-
+  
       // Add image to PDF (handle multiple pages if needed)
       let heightLeft = imgHeight;
       let position = 0;
-      
+  
       pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
-
+  
       while (heightLeft >= 0) {
         position = heightLeft - imgHeight;
         pdf.addPage();
         pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
         heightLeft -= pageHeight;
       }
-
+  
       // Save the PDF
       pdf.save(`invoice_${invoice.invoice_id}.pdf`);
-      
+  
       // Cleanup
-      document.body.removeChild(invoiceContainer);
+      document.body.removeChild(shadowHost);
     } catch (error) {
       console.error("PDF export error:", error);
       triggerAlert("Failed to generate PDF file", "error");

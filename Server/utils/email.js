@@ -3,6 +3,7 @@ dotenv.config();
 import nodemailer from "nodemailer";
 import {
   sendBookCancelEmailHTMLFormat,
+  sendBookCheckoutHTMLFormat,
   sendBookCreateHTMLFormat,
   sendResetEmailHTMLFormat,
   sendVerificationEmailHTMLFormat,
@@ -41,6 +42,13 @@ export const sendBookingCancellationEmail = async (
   return await sendEmail(guest_email, subject, html);
 };
 
+export const sendCheckoutMail = async (data,file) => {
+  console.log(data);
+  const subject = "Thank you for Staying with Us - Checkout Confirmation";
+  const html = sendBookCheckoutHTMLFormat(data);
+  const attachment = [file];
+  return await sendEmailAttachment(data.guest_email,subject,html,attachment);
+}
 export const sendResetEmail = async (user_email, reset_token) => {
   const subject = "Reset Password Link";
   const html = sendResetEmailHTMLFormat(reset_token);
@@ -54,6 +62,24 @@ export const sendEmail = async (to, subject, html) => {
       to,
       subject,
       html,
+    });
+
+    console.log("Email sent: ", info.response);
+    return info;
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw error;
+  }
+};
+
+export const sendEmailAttachment = async (to, subject, html,attachments=[]) => {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.GOOGLE_MAIL,
+      to,
+      subject,
+      html,
+      attachments
     });
 
     console.log("Email sent: ", info.response);

@@ -191,7 +191,7 @@ export const InvoiceFormat = (data) => {
             <div class="billing-info">
                 <div>
                     <p><strong>Guest Name:</strong> ${data.guest_name}</p>
-                    <p><strong>Address:</strong> ${data.address}, ${
+                    <p><strong>Address:</strong> ${data.guest_address}, ${
     data.city
   }, ${data.state}, ${data.country}</p>
                     <p><strong>Email ID:</strong> ${data.guest_email}</p>
@@ -199,7 +199,7 @@ export const InvoiceFormat = (data) => {
                     <p><strong>Aadhar No.:</strong> ${data.aadhar_no}</p>
                 </div>
                 <div>
-                    <p><strong>Invoice No.:</strong> ${data.invoice_no}</p>
+                    <p><strong>Invoice No.:</strong> ${data.invoice_id}</p>
                     <p><strong>Date:</strong> ${data.invoice_date}</p>
                     <p><strong>Check In:</strong> ${data.check_in_date}</p>
                     <p><strong>Check Out:</strong> ${data.check_out_date}</p>

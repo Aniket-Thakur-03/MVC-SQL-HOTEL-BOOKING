@@ -1,18 +1,18 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
-import CheckIn from "./CheckIn";
-import CheckOut from "./CheckOut";
-import AdultsDropdown from "./AdultsDropdown";
-import KidsDropdown from "./KidsDropdown";
+import CheckIn from "../Components/CheckIn";
+import CheckOut from "../Components/CheckOut";
+import AdultsDropdown from "../Components/common/AdultsDropdown";
+import KidsDropdown from "../Components/common/KidsDropdown";
 import { RoomContext } from "../Context/RoomContext";
 import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Components/Notification/CustomAlert.jsx";
 import { facilities } from "../data";
 import axios from "axios";
-import ImageCarousel from "./ImageCarousel";
+import ImageCarousel from "../Components/ImageCarousel";
 function RoomDetails() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");

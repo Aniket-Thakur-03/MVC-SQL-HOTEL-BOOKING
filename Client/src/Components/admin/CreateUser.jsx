@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { z } from "zod";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Notification/CustomAlert";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { User, Mail, Phone, Lock, UserCircle } from "lucide-react";

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Components/Notification/CustomAlert.jsx";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 

@@ -10,6 +10,7 @@ import { State } from "../Models/state.model.js";
 import { City } from "../Models/city.model.js";
 import { InvoiceFormat } from "../utils/invoiceFormat.js";
 import sequelize from "../dbconnection.js";
+import { sendCheckoutMail } from "../utils/email.js";
 
 export const InvoiceGenerator = async (booking, username, transaction, res) => {
   const date = new Date();
@@ -52,6 +53,7 @@ export const ViewInvoice = async (booking, res, transaction) => {
       replacements: { invoice_id: checkInvoice.invoice_id },
       transaction:transaction
     });
+    
     // Generate PDF from HTML content
     let browser;
     try {
@@ -96,8 +98,29 @@ export const ViewInvoice = async (booking, res, transaction) => {
           transaction: transaction,
         }
       );
-      await transaction.commit();
-
+      const data = {
+        booking_id:invoice[0].booking_id,
+        check_in_date:invoice[0].check_in_date,
+        check_out_date:invoice[0].check_out_date,
+        guest_name:invoice[0].guest_name,
+        guest_email:invoice[0].guest_email,
+        phoneno:invoice[0].location_phoneno,
+        amount_paid:invoice[0].amount_paid,
+        room_name:invoice[0].room_name
+      }
+      const file = {
+        filename:`INVOICE${invoice[0].invoice_id}.pdf`,
+        path:`./invoices/INVOICE${invoice[0].invoice_id}.pdf`
+      }
+      
+      await sendCheckoutMail(data,file).then((info)=>{
+        transaction.commit();
+        console.log("Email Sent:",info)
+      }).catch((err)=>{
+        console.log("Error sending email:",err);
+        transaction.rollback();
+        return res.status(500).json({message:"Some error occured"})
+      })
       // Send buffer directly
       return res.end(pdfBuffer);
     } finally {

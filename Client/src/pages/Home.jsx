@@ -1,7 +1,7 @@
-import About from "./About";
-import Rooms from "./Rooms";
-import BookForm from "./BookForm";
-import HeroSlider from "./HeroSlider";
+import About from "../Components/About";
+import Rooms from "../Components/Rooms";
+import BookForm from "../Components/BookForm";
+import HeroSlider from "../Components/HeroSlider";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { RoomContext } from "../Context/RoomContext";

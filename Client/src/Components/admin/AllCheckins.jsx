@@ -1,8 +1,9 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Notification/CustomAlert";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import ConfirmationPopup from "../Notification/ConfirmationPopup";
 function AllCheckins() {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
@@ -184,6 +185,16 @@ function AllCheckins() {
       setFilteredData([]); // Clear rooms if no location is selected
     }
   };
+  const [isPopupOpen, setPopupOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+
+  const handleOpenPopup = () => setPopupOpen(true);
+  const handleClosePopup = () => setPopupOpen(false);
+
+  const handleConfirm = () => {
+    handleConfirmBooking(selectedBookingId);
+    setPopupOpen(false);
+  };
   return (
     <div className="container mx-auto px-4 py-8">
       {issuper ? (
@@ -312,12 +323,24 @@ function AllCheckins() {
                 </p>
 
                 {item.booking_status === "pending" && (
+                  <>
                   <button
                     className="mt-4 px-4 py-2 bg-accent text-white rounded hover:bg-accent-dark transition"
-                    onClick={() => handleConfirmBooking(item.booking_id)}
+                    onClick={()=>{
+                      setSelectedBookingId(item.booking_id)
+                      handleOpenPopup()
+                    }}
                   >
                     Confirm Booking
                   </button>
+        
+                  <ConfirmationPopup
+                    isOpen={isPopupOpen}
+                    onClose={handleClosePopup}
+                    onConfirm={handleConfirm}
+                    message="Are you sure you want to confirm this booking?"
+                  />
+                </>
                 )}
               </div>
             ))}

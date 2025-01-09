@@ -3,7 +3,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Components/Notification/CustomAlert";
 
 function BookHistory() {
   const [data, setData] = useState([]);

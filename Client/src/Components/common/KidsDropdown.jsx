@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDown } from "lucide-react";
-import { RoomContext } from "../Context/RoomContext";
+import { RoomContext } from "../../Context/RoomContext";
 const lis = [
   { name: "0 kids", value: 0 },
   { name: "1 kids", value: 1 },

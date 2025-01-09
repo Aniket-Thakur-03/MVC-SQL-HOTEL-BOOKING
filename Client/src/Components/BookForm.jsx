@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import CheckIn from "./CheckIn";
 import CheckOut from "./CheckOut";
-import AdultsDropdown from "./AdultsDropdown";
-import KidsDropdown from "./KidsDropdown";
-import LocationSearch from "./LocationSearch";
+import AdultsDropdown from "./common/AdultsDropdown";
+import KidsDropdown from "./common/KidsDropdown";
+import LocationSearch from "./common/LocationSearch";
 import CustomAlert from "./Notification/CustomAlert";
 
 const BookForm = ({ onFetchRooms }) => {

@@ -1,10 +1,10 @@
 import { jwtDecode } from "jwt-decode";
-import { Roomtype } from "./Roomtype";
+import { Roomtype } from "../Roomtype";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import RoomForm from "./RoomForm";
-import CustomAlert from "./Notification/CustomAlert";
+import RoomForm from "../RoomForm";
+import CustomAlert from "../Notification/CustomAlert";
 
 export const CreateEditRoom = () => {
   const navigate = useNavigate();
@@ -170,15 +170,14 @@ export const CreateEditRoom = () => {
         }
       );
       if (response.status == 200) {
-        setShowroom(true);
         setRooms(response.data.rooms);
       } else {
-        setShowroom(false);
         setRooms([]);
       }
     } catch (error) {
       triggerAlert(`${error.response?.data.message || error.message}`, "error");
     } finally {
+      setShowroom(true);
       setLoading(false);
     }
   }

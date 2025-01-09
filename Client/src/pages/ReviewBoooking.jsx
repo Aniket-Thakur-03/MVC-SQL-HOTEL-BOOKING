@@ -3,9 +3,10 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import CustomAlert from "./Notification/CustomAlert";
+import CustomAlert from "../Components/Notification/CustomAlert";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import ConfirmationPopup from "../Components/Notification/ConfirmationPopup";
 
 function ReviewBooking() {
   const navigate = useNavigate();
@@ -130,6 +131,14 @@ function ReviewBooking() {
     }
   };
   console.log(bookingData);
+  const [isPopupOpen, setPopupOpen] = useState(false);
+  const handleOpenPopup = () => setPopupOpen(true);
+  const handleClosePopup = () => setPopupOpen(false);
+
+  const handleConfirm = () => {
+    handleSubmit();
+    setPopupOpen(false);
+  };
   return (
     <div className="container mx-auto py-6 px-4 sm:px-6 lg:px-8">
       <h2 className="text-2xl font-bold mb-6 text-center">
@@ -300,13 +309,20 @@ function ReviewBooking() {
         </p>
       </div>
 
-      {role === "simple_user" ? (
+      {role === "simple_user" ? (<>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
-          onClick={handleSubmit}
+          onClick={handleOpenPopup}
         >
           Confirm Booking
         </button>
+        <ConfirmationPopup
+                  isOpen={isPopupOpen}
+                    onClose={handleClosePopup}
+                    onConfirm={handleConfirm}
+                    message="Payment for booking will be taken at hotel. Are you sure you want to book?"
+                  />
+        </>
       ) : (
         <div className="text-red-500 text-center">
           {" "}

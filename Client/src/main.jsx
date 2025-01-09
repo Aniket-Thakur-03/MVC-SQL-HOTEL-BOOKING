@@ -6,39 +6,37 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import Home from "./Components/Home.jsx";
+import Home from "./pages/Home.jsx";
 import Layout from "./Layout.jsx";
-import About from "./Components/About.jsx";
 import "./index.css";
-import Contact from "./Components/Contact.jsx";
-import Login from "./Components/Login.jsx";
-import Signup from "./Components/Signup.jsx";
-import RoomDetails from "./Components/RoomDetails.jsx";
-import Restaurants from "./Components/Restaurants.jsx";
-import RoomInfo from "./Components/RoomInfo.jsx";
-import BookHistory from "./Components/BookHistory.jsx";
-import AdminDashboard from "./Components/AdminDashboard.jsx";
+import Login from "./pages/Login.jsx";
+import Signup from "./pages/Signup.jsx";
+import RoomDetails from "./pages/RoomDetails.jsx";
+import Restaurants from "./pages/Restaurants.jsx";
+import RoomInfo from "./pages/RoomInfo.jsx";
+import BookHistory from "./pages/BookHistory.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Unauthorized from "./Components/Unauthorized.jsx";
 import VerifyEmail from "./Components/VerifyEmail.jsx";
 import CheckEmail from "./Components/CheckEmail.jsx";
-import UpdateProfile from "./Components/UpdateProfile.jsx";
+import UpdateProfile from "./pages/UpdateProfile.jsx";
 import ResetPassword from "./Components/ResetPassword.jsx";
-import ReviewBoooking from "./Components/ReviewBoooking.jsx";
-import { CreateUser } from "./Components/CreateUser.jsx";
-import { AdminControl } from "./Components/AdminControl.jsx";
-import { Locations } from "./Components/Location.jsx";
-import AllBookings from "./Components/AllBookings.jsx";
-import AllCheckins from "./Components/AllCheckins.jsx";
-import AllCheckouts from "./Components/AllCheckouts.jsx";
-import UpdatePayment from "./Components/UpdatePayment.jsx";
+import ReviewBoooking from "./pages/ReviewBoooking.jsx";
+import { CreateUser } from "./Components/admin/CreateUser.jsx";
+import { AdminControl } from "./Components/admin/AdminControl.jsx";
+import { Locations } from "./Components/admin/Location.jsx";
+import AllBookings from "./Components/admin/AllBookings.jsx";
+import AllCheckins from "./Components/admin/AllCheckins.jsx";
+import AllCheckouts from "./Components/admin/AllCheckouts.jsx";
+import UpdatePayment from "./Components/admin/UpdatePayment.jsx";
 // import UpdateRoom from "./Components/UpdateRoom.jsx";
-import { AllCountries } from "./Components/AllCountries.jsx";
-import { AllStates } from "./Components/AllStates.jsx";
-import { AllCities } from "./Components/AllCities.jsx";
-import { CreateEditRoom } from "./Components/CreateEditRoom.jsx";
-import HistoryBook from "./Components/HistoryBook.jsx";
-import { ExtraServices } from "./Components/ExtraServices.jsx";
-import { ViewInvoices } from "./Components/ViewInvoices.jsx";
+import { AllCountries } from "./Components/admin/AllCountries.jsx";
+import { AllStates } from "./Components/admin/AllStates.jsx";
+import { AllCities } from "./Components/admin/AllCities.jsx";
+import { CreateEditRoom } from "./Components/admin/CreateEditRoom.jsx";
+import HistoryBook from "./Components/admin/HistoryBook.jsx";
+import { ExtraServices } from "./Components/admin/ExtraServices.jsx";
+import { ViewInvoices } from "./Components/admin/ViewInvoices.jsx";
 function getUserRole(token) {
   const decoded = jwtDecode(token);
   return decoded.role;
@@ -57,14 +55,6 @@ const router = createBrowserRouter([
       {
         path: "",
         element: <Home />,
-      },
-      {
-        path: "about",
-        element: <About />,
-      },
-      {
-        path: "contact",
-        element: <Contact />,
       },
       {
         path: "login",
