@@ -1,10 +1,6 @@
-import React, { useContext } from "react";
-import { RoomContext } from "../Context/RoomContext";
 import Room from "./Room";
 
-function Rooms() {
-  const { rooms } = useContext(RoomContext);
-
+function Rooms({ rooms }) {
   // Filter out rooms with no available rooms (noOfRooms === 0)
   const availableRooms = rooms.filter((room) => room.no_of_rooms > 0);
 

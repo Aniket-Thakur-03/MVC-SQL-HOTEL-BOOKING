@@ -5,7 +5,9 @@ import { Roomtype } from "../Models/roomtype.model.js";
 export const createRoom = async (req, res) => {
   // Check if all six images are uploaded
   if (!req.files || Object.keys(req.files).length !== 6) {
-    return res.status(400).json({ message: "All six images must be uploaded." });
+    return res
+      .status(400)
+      .json({ message: "All six images must be uploaded." });
   }
 
   // Create array of file paths for all six images
@@ -155,7 +157,8 @@ export const updateRoom = async (req, res) => {
 
     // Update basic fields if provided
     if (veg_meals_price) room.veg_meals_price = Number(veg_meals_price);
-    if (non_veg_meals_price) room.non_veg_meals_price = Number(non_veg_meals_price);
+    if (non_veg_meals_price)
+      room.non_veg_meals_price = Number(non_veg_meals_price);
     room.meals_available = meals_available;
     if (retail_price) room.retail_price = Number(retail_price);
     if (selling_price) room.selling_price = Number(selling_price);
@@ -172,12 +175,24 @@ export const updateRoom = async (req, res) => {
     }
 
     // Update images if provided
-    if (filePaths.room_image_1) {room.image_link_1 = filePaths.room_image_1;}
-    if (filePaths.room_image_2) {room.image_link_2 = filePaths.room_image_2;}
-    if (filePaths.room_image_3) {room.image_link_3 = filePaths.room_image_3;}
-    if (filePaths.room_image_4) {room.image_link_4 = filePaths.room_image_4;}
-    if (filePaths.room_image_5) {room.image_link_5 = filePaths.room_image_5;}
-    if (filePaths.room_image_6) {room.image_link_6 = filePaths.room_image_6;}
+    if (filePaths.room_image_1) {
+      room.image_link_1 = filePaths.room_image_1;
+    }
+    if (filePaths.room_image_2) {
+      room.image_link_2 = filePaths.room_image_2;
+    }
+    if (filePaths.room_image_3) {
+      room.image_link_3 = filePaths.room_image_3;
+    }
+    if (filePaths.room_image_4) {
+      room.image_link_4 = filePaths.room_image_4;
+    }
+    if (filePaths.room_image_5) {
+      room.image_link_5 = filePaths.room_image_5;
+    }
+    if (filePaths.room_image_6) {
+      room.image_link_6 = filePaths.room_image_6;
+    }
 
     room.updated_by = username;
     await room.save({ transaction: transaction });
@@ -207,15 +222,8 @@ export const getRoomsLocations = async (req, res) => {
           meals_available: room.meals_available,
           retail_price: room.retail_price,
           selling_price: room.selling_price,
-          veg_meals_price: room.veg_meals_price,
-          non_veg_meals_price: room.non_veg_meals_price,
           no_of_rooms: room.no_of_rooms,
           image_link_1: room.image_link_1,
-          image_link_2: room.image_link_2,
-          image_link_3: room.image_link_3,
-          image_link_4: room.image_link_4,
-          image_link_5: room.image_link_5,
-          image_link_6: room.image_link_6,
           location_id: room.location_id,
         };
         const roomtype = await Roomtype.findByPk(Number(room.roomtype_id), {
@@ -404,15 +412,77 @@ export const showRoomsWithTypes = async (req, res) => {
   }
 };
 
-export const singleRoomDetails = async (req,res) => {
+export const singleRoomFoodDetails = async (req, res) => {
   try {
     const room = await Room.findByPk(Number(req.params.id));
-    return res.status(200).json({room:{
-      veg_meals_price:room.veg_meals_price,
-      non_veg_meals_price:room.non_veg_meals_price,
-  }})
+    return res.status(200).json({
+      room: {
+        veg_meals_price: room.veg_meals_price,
+        non_veg_meals_price: room.non_veg_meals_price,
+      },
+    });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({message:error.message})
+    return res.status(500).json({ message: error.message });
   }
-}
+};
+
+export const singleRoomDetails = async (req, res) => {
+  try {
+    const room = await Room.findByPk(Number(req.params.id), {
+      attributes: [
+        "roomtype_id",
+        [
+          sequelize.literal(
+            "(SELECT room_name from hotel_booking.roomtypes WHERE roomtype_id = roomtype_id LIMIT 1)"
+          ),
+          "room_name",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT max_persons from hotel_booking.roomtypes WHERE roomtype_id = roomtype_id LIMIT 1)"
+          ),
+          "max_persons",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT max_adults from hotel_booking.roomtypes WHERE roomtype_id = roomtype_id LIMIT 1)"
+          ),
+          "max_adults",
+        ],
+        "selling_price",
+        "room_id",
+        "image_link_2",
+        "image_link_3",
+        "image_link_4",
+        "image_link_5",
+        "image_link_6",
+        "location_id",
+        [
+          sequelize.literal(
+            "(SELECT location_name from hotel_booking.locations WHERE location_id = location_id LIMIT 1)"
+          ),
+          "location_name",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT city from hotel_booking.locations WHERE location_id = location_id LIMIT 1)"
+          ),
+          "city",
+        ],
+        [
+          sequelize.literal(
+            "(SELECT pincode from hotel_booking.locations WHERE location_id = location_id LIMIT 1)"
+          ),
+          "pincode",
+        ],
+      ],
+    });
+    return res.status(200).json({
+      room,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+};

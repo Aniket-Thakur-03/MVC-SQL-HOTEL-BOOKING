@@ -49,7 +49,7 @@ function RoomDetails() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
-  const { rooms, adults, kids } = useContext(RoomContext);
+  const { adults, kids } = useContext(RoomContext);
   async function fetchCountries() {
     try {
       const response = await axios.get(
@@ -67,35 +67,20 @@ function RoomDetails() {
       }
     } catch (error) {
       console.log(error);
-      {localStorage.getItem("isLoggedIn") ? triggerAlert(`${error.response?.data.message || error.message}`, "error"): null}
+      {
+        localStorage.getItem("isLoggedIn")
+          ? triggerAlert(
+              `${error.response?.data.message || error.message}`,
+              "error"
+            )
+          : null;
+      }
     }
   }
   const [selectedCountryId, setSelectedCountryId] = useState(null);
   const [selectedStateId, setSelectedStateId] = useState(null);
   const [selectedCityId, setSelectedCityId] = useState(null);
-  const [locationRoom, setLocationRoom] = useState({});
-  async function fetchLocationRoom(location) {
-    try {
-      setLoading(true);
-      const response = await axios.get(
-        `http://localhost:8000/api/location/get/${location}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      if (response.status == 200) {
-        setLocationRoom(response.data.location);
-      } else {
-        setLocationRoom({});
-      }
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [room, setRoom] = useState({});
   async function fetchStates(countryId) {
     try {
       setLoading(true);
@@ -138,11 +123,12 @@ function RoomDetails() {
       }
     } catch (error) {
       // setErrors(`${error.response?.data.message || error.message}`);
+      triggerAlert(`${error.response?.data.message || error.message}`, "error");
+      console.log(error);
     }
   }
   const navigate = useNavigate();
   const { id } = useParams();
-  const room = rooms.find((room) => room.room_id === Number(id));
 
   const {
     room_name,
@@ -155,8 +141,11 @@ function RoomDetails() {
     image_link_4,
     image_link_5,
     image_link_6,
-    location_id,
+    location_name,
+    city,
+    pincode,
   } = room;
+  const locationRoom = { location_name, city, pincode };
   const images = [
     image_link_2,
     image_link_3,
@@ -165,7 +154,27 @@ function RoomDetails() {
     image_link_6,
   ].filter(Boolean);
   useEffect(() => {
-    fetchLocationRoom(location_id);
+    (async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(
+          `http://localhost:8000/api/rooms/single/${id}`
+        );
+        if (response.status == 200) {
+          setRoom(response.data.room);
+        } else {
+          setRoom({});
+        }
+      } catch (error) {
+        triggerAlert(
+          `${error.response?.data.message || error.message}`,
+          "error"
+        );
+        console.log(error);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
   const bookSchema = z.object({
     guestName: z
@@ -283,7 +292,7 @@ function RoomDetails() {
                   quibusdam quis beatae quae labore earum architecto aliquid
                   debitis.
                 </p>
-                <ImageCarousel images={images}/>
+                <ImageCarousel images={images} />
                 <div>
                   <h3 className="h3 mb-3">Room Facilities</h3>
                   <p className="mb-12">
@@ -503,13 +512,24 @@ function RoomDetails() {
                       value={request}
                       onChange={(e) => setRequest(e.target.value)}
                     />
-                    {localStorage.getItem("isLoggedIn")?<button
-                      type="submit"
-                      className="h-[60px] btn btn-lg btn-primary w-full"
-                      onClick={(e) => handleSubmit(e)}
-                    >
-                      Review Booking
-                    </button>: <Link state={{ from: location.pathname }}  to="/login" className="h-[100px] btn btn-lg btn-primary w-full" replace={true}>Login to Book</Link>}
+                    {localStorage.getItem("isLoggedIn") ? (
+                      <button
+                        type="submit"
+                        className="h-[60px] btn btn-lg btn-primary w-full"
+                        onClick={(e) => handleSubmit(e)}
+                      >
+                        Review Booking
+                      </button>
+                    ) : (
+                      <Link
+                        state={{ from: location.pathname }}
+                        to="/login"
+                        className="h-[100px] btn btn-lg btn-primary w-full"
+                        replace={true}
+                      >
+                        Login to Book
+                      </Link>
+                    )}
                   </div>
                 </div>
               </form>

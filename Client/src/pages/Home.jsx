@@ -2,9 +2,10 @@ import About from "../Components/About";
 import Rooms from "../Components/Rooms";
 import BookForm from "../Components/BookForm";
 import HeroSlider from "../Components/HeroSlider";
-import { useContext, useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { RoomContext } from "../Context/RoomContext";
+import axios from "axios";
+
 const Modal = ({ message, onClose }) => {
   return (
     <div
@@ -28,7 +29,8 @@ const Modal = ({ message, onClose }) => {
 };
 
 export default function Home() {
-  const { handleSearchRooms, loading } = useContext(RoomContext);
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showRooms, setShowRooms] = useState(false);
   const navigate = useNavigate();
@@ -39,14 +41,35 @@ export default function Home() {
 
     if (token && !hasSeenModal) {
       setShowModal(true);
-      localStorage.setItem("hasSeenModal", "true"); // Prevent future modal displays
+      localStorage.setItem("hasSeenModal", "true");
     }
   }, [navigate]);
 
-  const handleFetchRooms = (searchParams) => {
-    const { checkIn, checkOut, adults, kids, locationId } = searchParams;
-    handleSearchRooms({ checkIn, checkOut, adults, kids, locationId });
-    setShowRooms(true); // Switch to Rooms view
+  const handleFetchRooms = async ({
+    checkIn,
+    checkOut,
+    adults,
+    kids,
+    locationId,
+  }) => {
+    setLoading(true);
+    try {
+      const response = await axios.post("http://localhost:8000/api/rooms", {
+        checkIn,
+        checkOut,
+        adults,
+        kids,
+        locationId,
+      });
+      if (response.status === 200) {
+        setRooms(response.data.rooms);
+      }
+    } catch (error) {
+      console.error("Error fetching rooms:", error);
+    } finally {
+      setLoading(false);
+    }
+    setShowRooms(true);
   };
 
   const handleCloseModal = () => {
@@ -69,7 +92,7 @@ export default function Home() {
           <div className="animate-spin h-16 w-16 border-t-4 border-b-4 border-white rounded-full"></div>
         </div>
       )}
-      {showRooms ? <Rooms /> : <About />}
+      {showRooms ? <Rooms rooms={rooms} /> : <About />}
     </>
   );
 }

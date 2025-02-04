@@ -13,7 +13,7 @@ import {
 const cityRouter = Router();
 
 cityRouter.get("/get/:id", authenticateTokenUser, readCity);
-cityRouter.get("/get/active/:id", authenticateTokenUser, readCityUser);
+cityRouter.get("/get/active/:id", readCityUser);
 cityRouter.get("/get/city/:id", authenticateTokenUser, getCityId);
 cityRouter.post("/create/city", adminOnly, addCity);
 cityRouter.patch("/edit/city/:id", adminOnly, editCity);

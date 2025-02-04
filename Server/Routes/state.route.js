@@ -13,7 +13,7 @@ import {
 const stateRouter = Router();
 
 stateRouter.get("/get/:id", authenticateTokenUser, readState);
-stateRouter.get("/get/active/:id", authenticateTokenUser, readStateUser);
+stateRouter.get("/get/active/:id", readStateUser);
 stateRouter.get("/get/state/:id", authenticateTokenUser, getStateId);
 stateRouter.post("/create/state", adminOnly, addState);
 stateRouter.patch("/edit/state/:id", adminOnly, editState);
