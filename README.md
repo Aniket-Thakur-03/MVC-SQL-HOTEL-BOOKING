@@ -347,6 +347,57 @@ CREATE TABLE hotel_booking.roomtypes (
 );
 ```
 
+THIS IS A VIEW
+
+```
+CREATE OR REPLACE VIEW hotel_booking.invoice_details
+AS SELECT i.invoice_id,
+    i.invoice_date,
+    b.booking_id,
+    b.check_in_date,
+    b.check_out_date,
+    b.guest_name,
+    b.guest_email,
+    b.guest_aadhar_card AS aadhar_no,
+    b.address AS guest_address,
+    b.guest_phone_no,
+    b.no_of_days,
+    b.room_price,
+    b.meal_price,
+    b.meal_type,
+    b.meal_chosen,
+    b.breakfast,
+    b.lunch,
+    b.dinner,
+    b.amount_paid,
+    COALESCE(b.selected_services, '[]'::jsonb) AS selected_services,
+    b.services_price,
+    l.location_id,
+    l.location_name,
+    l.address AS location_address,
+    l.city AS location_city,
+    l.state AS location_state,
+    l.country AS location_country,
+    l.pincode AS location_pincode,
+    l.phoneno AS location_phoneno,
+    r.room_id,
+    r.veg_meals_price,
+    r.non_veg_meals_price,
+    rt.roomtype_id,
+    rt.room_name,
+    c.country_name AS country,
+    s.state_name AS state,
+    ct.city_name AS city
+   FROM hotel_booking.invoices i
+     JOIN hotel_booking.bookings b ON i.booking_id = b.booking_id
+     JOIN hotel_booking.locations l ON i.location_id = l.location_id
+     JOIN hotel_booking.rooms r ON b.room_id = r.room_id
+     JOIN hotel_booking.roomtypes rt ON r.roomtype_id = rt.roomtype_id
+     LEFT JOIN hotel_booking.countries c ON b.country_id = c.country_id
+     LEFT JOIN hotel_booking.states s ON b.state_id = s.state_id
+     LEFT JOIN hotel_booking.cities ct ON b.city_id = ct.city_id;
+```
+
 ## Tech Stack
 
 **Client:** Vite(React), TailwindCSS, React-Router, Zod
