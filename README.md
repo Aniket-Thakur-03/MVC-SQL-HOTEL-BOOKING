@@ -8,9 +8,7 @@ Frontend Credit: https://youtu.be/wSlEJOn-gJQ?si=-PUZOPp4ne9EOipR
 
 To run this project, you will need to add the following environment variables to your .env file in backend folder
 
-`PORT` 8000 or your-choice
-
-`CORS_ORIGIN` your-frontend-link
+`PORT` 8000
 
 `DB_PASSWORD` postgres-database-password
 
@@ -37,7 +35,7 @@ To run this project, you will need to add the following environment variables to
 Clone the project
 
 ```bash
-  git clone https://github.com/An1ket-thakur/Hotel_Booking_Website.git
+  git clone https://github.com/An1ket-thakur/MVC-SQL-HOTEL-BOOKING.git
 ```
 
 Go to the Client directory
