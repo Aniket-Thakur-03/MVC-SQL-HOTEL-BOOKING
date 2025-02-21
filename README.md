@@ -20,6 +20,8 @@ To run this project, you will need to add the following environment variables to
 
 `DB_NAME` your-postgres-database-name
 
+`DB_SCHEMA` your-postgres-schema-name
+
 `ACCESS_TOKEN_SECRET` your-jwt-secret-key
 
 `ACCESS_TOKEN_EXPIRY` 1d
@@ -76,8 +78,9 @@ Start the Server
   npm start
 ```
 
-> [!IMPORTANT]  
-> Create tables in your schema of postgress database(DB_NAME)
+> [!IMPORTANT]
+> Making first superadmin(admin with all features access espically location,admin control) requires manual data entry in users, useradmins, adminpreferences table.
+> Create tables in your schema(DB_SCHEMA) of postgress database(DB_NAME)
 > Tables Name: users, rooms, bookings, cities, countries, states, invoices, locations, roomtypes, useradmins, features, adminpreferences, extraservices
 
 ```
@@ -266,10 +269,6 @@ CREATE TABLE hotel_booking.features (
 	feature_id serial4 NOT NULL,
 	feature_name varchar NOT NULL,
 	feature_url varchar NOT NULL,
-	created_at timestamptz NOT NULL,
-	updated_at timestamptz NOT NULL,
-	"isActive" bool DEFAULT false NOT NULL,
-	updated_by varchar NULL,
 	CONSTRAINT features_pk PRIMARY KEY (feature_id)
 );
 ```
@@ -396,6 +395,26 @@ AS SELECT i.invoice_id,
      LEFT JOIN hotel_booking.countries c ON b.country_id = c.country_id
      LEFT JOIN hotel_booking.states s ON b.state_id = s.state_id
      LEFT JOIN hotel_booking.cities ct ON b.city_id = ct.city_id;
+```
+
+DATA FOR features table
+
+```
+INSERT INTO hotel_booking.features (feature_name, feature_url) VALUES
+('All Bookings', '/all-bookings'),
+('Checkins', '/check-ins'),
+('Checkouts', '/check-outs'),
+('Update Payment', '/update-payment-status'),
+('Rooms', '/update-rooms'),
+('Countries', '/update-countries'),
+('States & UTs', '/update-states'),
+('Cities', '/update-cities'),
+('Create User', '/create-user'),
+('Admin Control', '/admin-control'),
+('Locations', '/location'),
+('Book History', '/book-history'),
+('Services', '/extra-services'),
+('Invoices', '/view-invoices');
 ```
 
 ## Tech Stack
