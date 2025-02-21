@@ -62,7 +62,6 @@ const User = sequelize.define(
   {
     timestamps: true,
     tableName: "users",
-    schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
     hooks: {

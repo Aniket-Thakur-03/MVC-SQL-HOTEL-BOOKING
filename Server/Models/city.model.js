@@ -43,7 +43,6 @@ export const City = sequelize.define(
   },
   {
     tableName: "cities",
-    schema: "hotel_booking",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

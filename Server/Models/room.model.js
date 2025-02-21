@@ -135,7 +135,6 @@ const Room = sequelize.define(
   {
     timestamps: true,
     tableName: "rooms",
-    schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
     hooks: {

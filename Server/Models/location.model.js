@@ -55,7 +55,6 @@ const Location = sequelize.define(
   {
     tableName: "locations",
     timestamps: true,
-    schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
   }

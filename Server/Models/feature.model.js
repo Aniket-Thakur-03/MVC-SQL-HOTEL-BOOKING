@@ -20,11 +20,8 @@ const Feature = sequelize.define(
     },
   },
   {
-    timestamps: true,
+    timestamps: false,
     tableName: "features",
-    schema: "hotel_booking",
-    createdAt: "created_at",
-    updatedAt: "updated_at",
   }
 );
 

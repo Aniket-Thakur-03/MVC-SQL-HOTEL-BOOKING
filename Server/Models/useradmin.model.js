@@ -72,7 +72,6 @@ export const Useradmin = sequelize.define(
   },
   {
     tableName: "useradmins",
-    schema: "hotel_booking",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",

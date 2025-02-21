@@ -211,7 +211,6 @@ const Booking = sequelize.define(
   {
     timestamps: true,
     tableName: "bookings",
-    schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
   }

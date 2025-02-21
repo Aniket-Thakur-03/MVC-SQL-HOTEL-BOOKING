@@ -50,7 +50,6 @@ const Invoice = sequelize.define(
   {
     timestamps: true,
     tableName: "invoices",
-    schema: "hotel_booking",
     createdAt: "created_at",
     updatedAt: "updated_at",
   }

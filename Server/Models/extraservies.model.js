@@ -47,7 +47,6 @@ const ExtraService = sequelize.define(
   },
   {
     tableName: "extraservices",
-    schema: "hotel_booking",
     timestamps: true,
     createdAt: "created_at",
     updatedAt: "updated_at",
