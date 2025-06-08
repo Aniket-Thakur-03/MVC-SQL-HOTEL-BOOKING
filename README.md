@@ -419,6 +419,6 @@ INSERT INTO hotel_booking.features (feature_name, feature_url) VALUES
 
 **Client:** Vite(React), TailwindCSS, React-Router, Zod
 
-**Server:** Node, Express, pg
+**Server:** Node, Express, Sequelize
 
 **Database:** PostgreSQL
